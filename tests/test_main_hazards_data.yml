@@ -1,0 +1,42 @@
+generate_hazard:
+  - source: slf
+    expected_keys: [lf, lf_from_freesurf]
+  - source: bfm
+    expected_keys: [simple_a]
+  - source: unknown
+    raises: ValueError
+    match: "should be 'bfm' or 'slf'"
+generate_hazard_from_bands:
+  - fillna0: true
+    expected_all_zero: true
+  - fillna0: false
+    expected_all_nan: true
+generate_slf_hazard:
+  - name: both_dmg
+    use: {floodam: true, jrc: false}
+    expected_keys: [lf, lf_from_freesurf]
+    band0_finite: true
+  - name: jrc_only
+    use: {floodam: false, jrc: true}
+    expected_keys: [lf, lf_from_freesurf]
+    empty_speed_duration: true
+  - name: no_depth
+    use: {floodam: true, jrc: false}
+    no_depth: true
+    expected_keys: [lf, lf_from_freesurf]
+    empty_depth: true
+  - name: loads_existing
+    use: {floodam: true, jrc: false}
+    expected_keys: [lf, lf_from_freesurf]
+    loads_existing: true
+generate_bfm_hazard:
+  - name: two_methods
+    methods: {"use.defended.simple_a": true, "use.defended.fwdet_l": true}
+    expected_keys: [simple_a, fwdet_l]
+  - name: reuses_duration
+    methods: {}
+    expected_keys: [simple_a]
+    reuse_duration: true
+generate_bfm_duration:
+  - mindate: "2019-12-01"
+    maxdate: "2019-12-31"

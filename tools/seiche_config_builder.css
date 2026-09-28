@@ -1,0 +1,35 @@
+/* Libre Baskerville */
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400..700;1,400..700&display=swap');
+/* Courier Prime */
+@import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+/* target the title of the accordion */
+:host h3 button .prose {
+  font-size: 1.5rem !important;
+  font-family: C059, serif !important;
+}
+
+/* target the text inside the accordion */
+:host h3+div .prose {
+  font-size: 1rem !important;
+  font-family: "Libre Baskerville", serif !important;
+}
+
+/* target the mono (inline `code`) text inside the accordion */
+:host h3+div code {
+  font-size: 1rem !important;
+  font-family: "Courier Prime", monospace !important;
+}
+
+/* target the labels of the ui inputs (the input lives in its own shadow root) */
+:host [part="label"] code {
+  font-size: 1rem !important;
+  font-family: "Courier Prime", monospace !important;
+}
+
+/* targets the rest */
+:root {
+  --monospace-font: "Courier Prime", monospace;
+  --text-font: "Libre Baskerville", serif;
+  --heading-font: C059, serif;
+}

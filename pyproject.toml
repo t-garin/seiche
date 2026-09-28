@@ -1,0 +1,67 @@
+[project]
+name = "seiche"
+version = "0.0.dev0"
+description = "Socio Economic Impacts of Catastrophic Hydrological Events"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "dask>=2026.1.2",
+    "exactextract>=0.3.0",
+    "geopandas>=1.1.2",
+    "geoviews>=1.15.1",
+    "hvplot>=0.12.2",
+    "matplotlib>=3.10.8",
+    "netcdf4>=1.7.4",
+    # pyproj 3.8.0 fixes a DeprecationWarning from the single-point transform
+    "pyproj>=3.8.0",
+    # pysheds master fixes the numpy 2.0 `in1d` deprecation (unreleased)
+    "pysheds @ git+https://github.com/pysheds/pysheds.git",
+    "pyyaml>=6.0.3",
+    "rioxarray>=0.21.0",
+    "typst>=0.15.0",
+    "xarray>=2025.11.0",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.2.0",
+    "ruff>=0.15.1",
+    "scalene>=1.5.45",
+    "ty>=0.0.76",
+]
+test = [
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+]
+docs = [
+    "marimo>=0.24.0",
+    "markdownify>=1.2.3",
+    "mkdocs>=1.6.1",
+    "mkdocs-api-autonav>=0.4.0",
+    "mkdocs-material>=9.7.1",
+    "mkdocstrings-python>=2.0.2",
+    "pyan3==2.5.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src", "tests"]
+
+[tool.ruff]
+target-version = "py313"
+output-format = "concise"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D200", "D203", "D212", "COM812"]
+
+[tool.ty.src]
+include = ["src", "tests"]
+
+[tool.ty.environment]
+root = ["./src", "./tests"]
+
+[tool.ty.analysis]
+allowed-unresolved-imports = ["data_manip.extraction.telemac_file"]
+
+[tool.ty.rules]
+all = "error"

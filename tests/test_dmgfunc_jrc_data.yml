@@ -1,0 +1,108 @@
+dmgfac_vector:
+  - class_vector: [1, 0, 0, 0, 0, 0]
+    expected: 0.25
+    std_expected: null
+  - class_vector: [0, 0, 0, 0, 0, 0]
+    expected: 0
+    std_expected: 0
+  - class_vector: [0.5, 0.5, 0, 0, 0, 0]
+    expected: 0.25
+    std_expected: null
+  - class_vector: [2, 0, 0, 0, 0, 0]
+    expected: 0.25
+    std_expected: null
+  - class_vector: [1, 0, 0, 0, 0, 0]
+    expected: 0.25
+    std_expected: null
+    as_np: true
+dmgfac_vector_rejects:
+  - class_vector: [1, 0]
+    region: eu
+    match: shape
+  - class_vector: [1, 0, 0, 0, 0, -1]
+    region: eu
+    match: should be >= 0
+classe_rejects:
+  - classe: zz
+    region: eu
+    match: CLASSE INVALID
+missing_columns:
+  - drop_cols: [dmgEU]
+    index: 0
+  - drop_cols: [stdEU]
+    index: 1
+maxdmg_classe_all_combos:
+  - [h, landuse]
+  - [h, object]
+  - [c, building]
+  - [c, landuse]
+  - [c, object]
+  - [i, building]
+  - [i, landuse]
+  - [i, object]
+  - [t, landuse]
+  - [r, landuse]
+  - [a, landuse]
+maxdmg_classe_rejects:
+  - a3: FR
+    classe: h
+    hci_mode: landuse
+    match: a3 country codes
+  - a3: FRA
+    classe: zz
+    hci_mode: landuse
+    match: invalid classe
+map_jrc:
+  50: [0.8, 0.1, 0.1, 0.0, 0.0, 0.0]
+  40: [0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+  0: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+init:
+  - key: classes
+    expected: [h, c, i, t, r, a]
+  - key: regions
+    expected: [eu, na, sa, as, af, oc, gl]
+  - key: dmgfac_df
+    expected: true
+read_precompiled:
+  - wrong_hash: true
+    raises: RuntimeError
+    match: sha256 mismatch
+raster_lc:
+  - rows: [50, 40, 50, 40, 0]
+    expected_col0: [0.22998046875, 0.300048828125, 0.22998046875, 0.300048828125, 0.0]
+  - rows: [99, 99, 99, 99, 99]
+    expected_all_nan: true
+vector_lc:
+  - classes: [40, 40, 0, 40]
+    expected_dmg: [0.3, 0.3, 0.0, 0.3]
+max_dmg_raster_lc:
+  - rows: [50, 40, 50, 40, 0]
+    expected_corner: 30.425117742082893
+    expected_zero: 0.0
+maxdmg_classe_h_building:
+  - a3: FRA
+    expected: 775.6305714397704
+  - a3: fra
+    expected: 775.6305714397704
+maxdmg_classe_enum_rejects:
+  - enum: JrcClass
+    value: zz
+    raises: ValueError
+  - enum: HciMode
+    value: bogus
+    raises: ValueError
+maxdmg_vector:
+  - class_vector: [1, 0, 0, 0, 0, 0]
+    hci_mode: building
+    expected: 775.6305714397704
+  - class_vector: [0, 0, 0, 0, 0, 0]
+    hci_mode: landuse
+    expected: 0.0
+  - class_vector: [0.5, 0.5, 0, 0, 0, 0]
+    hci_mode: landuse
+    expected: 155.1261142879541
+  - class_vector: [0.5, 0.3, 0.2, 0, 0, 0]
+    hci_mode: landuse
+    expected: 37.78913803442165
+constants:
+  - expected: 2

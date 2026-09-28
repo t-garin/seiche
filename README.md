@@ -1,5 +1,16 @@
-# seiche
+# Seiche
 
-This repository is currently empty and will probably remain so until the end of my contract in December 2026, as I need to tidy things up before making it public. 
+_Socio Economic Impacts of Catastrophic Hydrological Events_
 
-Please contact me directly (t.garin@proton.me) if you need access to any code – I will be very happy to provide it!
+---
+![coverage](https://gitlab.com/cerfacs/globc/seiche/badges/master/coverage.svg)
+
+---
+
+See documentation here: https://cerfacs.gitlab.io/globc/seiche/
+
+Some test data is available here: https://mercure.cerfacs.fr/seiche/
+
+\---
+**⚠️ This repository is under active developpement and is subject to many unprompted breaking changes. ⚠️**
+\---

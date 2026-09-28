@@ -1,0 +1,19 @@
+impact_pop:
+  - name: both_datasets
+    filosofi: true
+    ghslpop: true
+    expected_files:
+      - ghslpop_hf_always_true_test.tif
+      - ghslpop_hf_is_above_30cm_test.tif
+      - filosofi_hf_always_true_test.gpkg
+      - filosofi_hf_is_above_30cm_test.gpkg
+  - name: ghslpop_only
+    filosofi: false
+    ghslpop: true
+    expected_files: [ghslpop_hf_always_true_test.tif]
+    absent_patterns: ["filosofi_hf_*.gpkg"]
+  - name: filosofi_only
+    filosofi: true
+    ghslpop: false
+    expected_files: [filosofi_hf_always_true_test.gpkg]
+    absent_patterns: ["ghslpop_hf_*.tif"]

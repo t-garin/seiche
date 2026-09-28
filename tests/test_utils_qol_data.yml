@@ -1,0 +1,56 @@
+asinstance:
+  - obj: "x"
+    cls: str
+    expected: "x"
+  - obj: 5
+    cls: int
+    expected: 5
+  - obj: 1
+    cls: str
+    raises: TypeError
+    match: expected an instance of str
+require:
+  - x: 5
+    expected: 5
+  - x: null
+    raises: TypeError
+    match: expected a value
+parse_args:
+  - argv: [seiche, config.yml, -v]
+    configfile: config.yml
+    verbose: true
+  - argv: [seiche, config.yml]
+    configfile: config.yml
+    verbose: false
+  - argv: [seiche]
+    raises: SystemExit
+file_sha256:
+  - content: hello
+    expected: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+  - content: ""
+    expected: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  - content: "a,b\n1,2\n"
+    expected: "492d5ea496056f1a6a6592241032fab764c321596317930b4fa0e1e8bc3b7470"
+is_file_ok:
+  - content: hello
+    hash: "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824"
+    expected: true
+  - content: hello
+    hash: "0000000000000000000000000000000000000000000000000000000000000000"
+    expected: false
+gpkg_sha256:
+  - ind: [1]
+    geometry: [0, 0, 1, 1]
+    crs: "EPSG:2154"
+    expected: "6e7e72d8786489b47cbe9045d71051985dfe64d383a641ef620ad123228dd4a1"
+is_gpkg_ok:
+  - ind: [1]
+    geometry: [0, 0, 1, 1]
+    crs: "EPSG:2154"
+    hash: "6e7e72d8786489b47cbe9045d71051985dfe64d383a641ef620ad123228dd4a1"
+    expected: true
+  - ind: [1]
+    geometry: [0, 0, 1, 1]
+    crs: "EPSG:2154"
+    hash: "0000000000000000000000000000000000000000000000000000000000000000"
+    expected: false

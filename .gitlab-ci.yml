@@ -1,0 +1,58 @@
+# stages:
+# - build
+# - test
+# - pages
+
+# .base_ruff:
+#     stage: build
+#     interruptible: true
+#     image:
+#         name: ghcr.io/astral-sh/ruff:0.15.12-alpine
+#     before_script:
+#         - cd $CI_PROJECT_DIR
+#         - ruff --version
+
+# Ruff Check:
+#     extends: .base_ruff
+#     script:
+#         - ruff check --output-format=gitlab --output-file=code-quality-report.json src/seiche
+#     artifacts:
+#         reports:
+#             codequality: $CI_PROJECT_DIR/code-quality-report.json
+
+# Ruff Format:
+#     extends: .base_ruff
+#     script:
+#         - ruff format --diff src/seiche
+
+# test:
+#     stage: test
+#     image: python:3.13
+#     script:
+#         - pip install uv
+#         - uv sync --group test
+#         - uv run pytest --cov=src/seiche --cov-report=term-missing
+#     coverage: '/TOTAL.*\s+(\d+%)$/'
+#     cache:
+#         key: ${CI_COMMIT_REF_SLUG}
+#         paths:
+#             - ~/.cache/
+#             - .venv/
+
+# pages:
+#     stage: pages
+#     image: python:3.13
+#     script:
+#         - apt-get update && apt-get install -y graphviz
+#         - pip install pyan3==2.5.0
+#         - pyan3 -m src/seiche/ --module-level --svg > docs/files_call_graph.svg
+#         - pip install mkdocs==1.6.1 mkdocs-material==9.7.1 mkdocstrings mkdocs-api-autonav
+#         - mkdocs build --site-dir public
+#     cache:
+#         key: ${CI_COMMIT_REF_SLUG}
+#         paths:
+#             - ~/.cache/
+#     pages:
+#         publish: public
+#     rules:
+#         - if: "$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH"

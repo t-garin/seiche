@@ -1,0 +1,12 @@
+Objectives before industrialization by CNES-DTF
+-----------------------------------------------
+- check tests are not stupid -> hypothesis testing framework ?
+- MORE ENUMS
+- remove maximum of #noqa
+- Check that camelCase is completely removed and UPPERCASE only for constants.
+- better commit tags in agents.md
+- renomer les noms de fichier en sortie pour que ça soit plus clair ?
+- dans la doc faire un mini rapport par cast test
+- scripts de post traitement
+- clean auto report
+- fichiers slurms spécialisés par clusters (voir avec Isa + Andrea)

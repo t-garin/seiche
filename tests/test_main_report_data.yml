@@ -1,0 +1,61 @@
+quote:
+  - text: 'a"b\c'
+    expected: '"a\"b\\c"'
+  - text: plain
+    expected: '"plain"'
+group_plots:
+  - plots:
+      - hzd_hf_test.tif_H.png
+      - dem_test.tif.png
+      - ghslpop_hf_always_true_test.tif_map.png
+      - mystery.png
+    expected:
+      dem: [dem_test.tif.png]
+      hzd: [hzd_hf_test.tif_H.png]
+      ghslpop: [ghslpop_hf_always_true_test.tif_map.png]
+      Other: [mystery.png]
+metadata:
+  - config:
+      path.inp.slf: null
+      path.inp.bfm.root: null
+      use.dmg.floodam: true
+      use.dmg.jrc: false
+      path.inp.lcv.esawc: [esawc.tif]
+      path.inp.lcv.oso23: null
+      path.inp.lcv.rpg: null
+      path.inp.lcv.bdtopo: null
+      path.inp.lcv.sirene: null
+      path.inp.pop.ghslpop: null
+      path.inp.pop.filosofi: null
+      param.pop.conditions: {always_true: "True"}
+    expected:
+      Experiment: test
+      Hazard sources: ""
+      Damage functions: floodam
+      Landcovers: esawc
+      Population datasets: ""
+      Pop conditions: always_true
+build_doc:
+  - experiment: test
+    metadata: [[Experiment, test]]
+    groups:
+      dem: [dem_test.tif.png]
+      hzd: [hzd_hf_test.tif_H.png]
+      lcv: []
+      Other: []
+    expected: |-
+      #import "report_template.typ": report
+      #report(
+        experiment: "test",
+        metadata: (
+          ("Experiment", "test"),
+        ),
+        sections: (
+          "Digital Elevation Model": (
+            (path: "dem_test.tif.png", caption: "dem test.tif"),
+          ),
+          "Hazard": (
+            (path: "hzd_hf_test.tif_H.png", caption: "hzd hf test.tif H"),
+          ),
+        ),
+      )

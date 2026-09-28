@@ -1,0 +1,31 @@
+dump_load:
+  - config: {param: 1}
+    done: {init: true, dem: true}
+    dem: dem.tif
+    hazard: {slf1: hzd_slf1.tif}
+    expected_done: {init: true, dem: true}
+run_pipeline:
+  - done: {a: true}
+    steps: [a, b]
+    expected_calls: [b]
+  - done: {}
+    steps: [a, b]
+    expected_calls: [a, b]
+  - done: {a: true, b: true}
+    steps: [a, b]
+    expected_calls: []
+initialize_state:
+  - cold_run: false
+    config: {param.cold_run: false}
+    load_done: {dem: true}
+    expected_done: {dem: true}
+  - cold_run: true
+    config: {param.cold_run: true}
+    write_old_file: true
+    expected_done: {}
+main:
+  - verbose: false
+  - verbose: true
+cli:
+  - verbose: false
+  - verbose: true

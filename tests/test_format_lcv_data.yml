@@ -1,0 +1,58 @@
+load_vector_lcv:
+  - id: from_shp
+    codes: [1, 2, 3, 4]
+    expected_len: 4
+    expected_codes: [1, 2, 3, 4]
+  - id: loads_existing
+    codes: [1, 2, 3, 4]
+    cached: true
+    expected_len: 1
+    expected_codes: [9]
+  - id: single_shp_required
+    n_files: 2
+    raises: ValueError
+    match: ONLY ONE SHP
+  - id: gpkg_with_layer
+    kind: gpkg
+    layer: batiment
+    usage: ["Résidentiel"]
+    expected_len: 1
+    expected_usage: ["Résidentiel"]
+load_sirene:
+  - id: from_csv
+    csv: "longitude,latitude,name\n0.516,43.77,a\n"
+    expected_len: 1
+    expected_crs: 2154
+  - id: single_file_required
+    n_files: 2
+    raises: ValueError
+    match: ONLY ONE SHP
+generate_or_load_lcv:
+  - id: esawc_raster
+    landcover: esawc
+    file: {name: esawc.tif, value: 50.0, n: 10, x: 499500, y: 6299500}
+    expected_type: raster
+    expected_shape: [1, 10, 10]
+  - id: esawc_raster_loads_existing
+    landcover: esawc
+    file: {name: esawc.tif, value: 50.0, n: 10, x: 499500, y: 6299500}
+    loads_existing: true
+    expected_type: raster
+    expected_shape: [1, 10, 10]
+  - id: rpg_vector
+    landcover: rpg
+    file: {name: rpg.shp}
+    expected_type: vector
+    expected_len: 4
+  - id: sirene_vector
+    landcover: sirene
+    file: {name: sirene.csv}
+    csv: "longitude,latitude,name\n0.516,43.77,a\n"
+    loads_existing: true
+    expected_type: vector
+    expected_len: 1
+  - id: unknown_type_raises
+    landcover: oso23
+    file: {name: oso23.xyz}
+    raises: ValueError
+    match: Wrong landcover file type

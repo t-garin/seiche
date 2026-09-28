@@ -1,0 +1,64 @@
+param.autoplot: null
+param.autoreport: null
+param.cold_run: null
+param.defended.hand_threshold: null
+param.EPSG: null
+param.expname: null
+param.floodam.alea: null
+param.floodam.season: null
+param.jrc.a3: null
+param.jrc.region: null
+param.slf.pixel_size: null
+path.inp: null
+path.inp.POLY: null
+param.bfm.flooded_threshold: null
+param.bfm.target_resolution: null
+param.bfm.end_date: null
+param.bfm.start_date: null
+path.inp.bfm.files2ignore: null
+path.inp.bfm.filter_key: null
+path.inp.bfm.regex: null
+path.inp.bfm.root: null
+path.inp.dem.EPSG: null
+path.inp.dem.filter_key: null
+path.inp.dem.root: null
+path.inp.lcv.bdtopo: null
+path.inp.lcv.esawc: null
+path.inp.lcv.oso23: null
+path.inp.lcv.rpg: null
+path.inp.lcv.sirene: null
+path.inp.pop.filosofi: null
+path.inp.pop.ghslpop: null
+path.inp.slf:
+    - filepath: null
+      epsg: null
+      nickname: null
+      xspeedVarname: null
+      yspeedVarname: null
+      depthVarname: null
+      depthThreshold: null
+      freesurfVarname: null
+
+    - filepath: null
+      epsg: null
+      nickname: null
+      xspeedVarname: null
+      yspeedVarname: null
+      depthVarname: null
+      depthThreshold: null
+      freesurfVarname: null
+
+path.out: null
+use.defended.fwdet_c: null
+use.defended.fwdet_l: null
+use.defended.fwdet_n: null
+use.defended.hand_a: null
+use.defended.hand_e: null
+use.defended.simple_a: null
+use.defended.simple_e: null
+use.dmg.floodam: null
+use.dmg.jrc: null
+param.pop.conditions:
+    always_true: "True"
+    is_above_30cm: "h > 0.3"
+    is_touched_by_water: "h > 0"

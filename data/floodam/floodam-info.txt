@@ -1,0 +1,24 @@
+read: https://www.ecologie.gouv.fr/sites/default/files/documents/Analyse%20multicrit%C3%A8re%20des%20projets%20de%20pr%C3%A9vention%20des%20inondations%20-%20le%20guide%20m%C3%A9thodologique_V2.pdf
+
+source: https://www.ecologie.gouv.fr/levaluation-economique-des-projets-gestion-des-risques-naturels
+
+
+#
+
+Last downloads on 2025-06-25, with the following checksums
+
+SHA256CHECKSUMS = {
+    "ct.xls": "74fe542b249fc9b45af7fb26b1d844e9945e4c44b5a47cfecf172bf38318d26b", 
+    "fa.xls": "384a80e5b3b3b912bf653f22f04fd417dcfe5579fc3d2cb9cf223b3a50f76591",
+    "fc.xlsx": "3c9a34e8393cef4124107e04d32524fdcc4193bb957a97291be1b096783b0329",
+    "fh.xls": "eb4ee04f27aefe387acc59f3a2f3eac0791697904054db2b77eac1656b713aaf",
+    "fp.xls": "655be159facc4055bd010ed85a623d040472c4febfb70d87fd5038580e45b32f",
+    "fw.xlsx": "832b81bd08ba4c8f6d98e3fccb8026e81755f5af78ba32ad7da962a9707c81d4",
+    "mc.xlsx": "3c9a34e8393cef4124107e04d32524fdcc4193bb957a97291be1b096783b0329",
+    "mh.xls": "f09c8f38e331f728aa037af12654abd17a66920bc6c53f45f47dd76d826e0bee",
+    "mp.xls": "e40c4538659bac9ef276719100c1dd5579c94f12c7007b258f3a719f3efff996",
+} 
+
+Precompiled files live in data/floodam/precompiled/ (see tools/format_floodam.py).
+Their sha256 manifest is data/floodam/precompiled/sha256.txt and is checked at
+runtime by dmgfunc_floodam to detect corrupted files.

@@ -1,0 +1,42 @@
+expname:
+  - expname: custom_name
+    expected: custom_name
+  - expname: null
+    expected: marmande
+epsg:
+  - epsg: 3857
+    write_poly: false
+    expected: 3857
+  - epsg: null
+    write_poly: true
+    expected: 4326
+use_variables:
+  - floodam: true
+    jrc: true
+    expected: [true, true, true]
+  - floodam: false
+    jrc: true
+    expected: [true, false, false]
+  - floodam: false
+    jrc: false
+    raises: ValueError
+    match: At least one of jrc, floodam
+pop_conditions:
+  - conditions: {}
+    raises: ValueError
+    match: non-empty dict
+  - conditions: null
+    raises: ValueError
+    match: non-empty dict
+  - conditions: "h > 0"
+    raises: ValueError
+    match: non-empty dict
+  - conditions: {always_true: "True"}
+    expected: {always_true: "True"}
+get_config:
+  - template: true
+    overrides: {path.out: out, param.EPSG: 2154}
+    expected: {path.out: out, param.EPSG: 2154}
+  - template: false
+    raises: ValueError
+    match: not well formatted

@@ -1,0 +1,51 @@
+init:
+  - key: epsg
+    expected: 2154
+  - key: depth_varname
+    expected: "HAUTEUR D'EAU"
+  - key: x_speed_varname
+    expected: "VITESSE U"
+  - key: y_speed_varname
+    expected: "VITESSE V"
+  - key: freesurf_varname
+    expected: "SURFACE LIBRE"
+init_rejects:
+  - epsg: "2154"
+    raises: TypeError
+    match: "'epsg' must be an integer"
+delineation:
+  - expected_bounds: [411788.5, 232928.09375, 438237.1875, 256064.59375]
+generate_grid:
+  - pixel_size: 500
+    expected_shape: [1, 47, 53]
+    expected_crs: 2154
+interp_values:
+  - fill: 1.5
+    expected_shape: [1, 47, 53]
+    expected_max: 1.5
+  - fill: 1.0
+    expected_shape: [1, 47, 53]
+    has_nan: true
+    has_finite: true
+interp_values_rejects:
+  - n_bands: 3
+    raises: ValueError
+    match: "shape \\(1, n, m\\)"
+  - n_nodes: 3
+    raises: ValueError
+    match: nodesValues is not of shape
+interp:
+  - method: interp_max_depth_on_grid
+    kwargs: {}
+    expected_max: 11.937424659729004
+  - method: interp_max_freesurf_on_grid
+    kwargs: {}
+    expected_max: 35.2349967956543
+  - method: interp_duration_on_grid
+    kwargs: {threshold: 0.05}
+    expected_max: 1260000.0
+  - method: interp_max_speed_on_grid
+    kwargs: {}
+    expected_max: 3.5034267902374268
+raster_ndims:
+  - expected: 3

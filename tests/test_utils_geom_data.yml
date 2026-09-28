@@ -1,0 +1,28 @@
+intersection:
+  - bbox1: [0, 0, 10, 10]
+    bbox2: [5, 5, 15, 15]
+    expected: [5, 5, 10, 10]
+  - bbox1: [0, 0, 2, 2]
+    bbox2: [5, 5, 7, 7]
+    expected: [5, 5, 2, 2]
+  - bbox1: [1, 2, 3, 4]
+    bbox2: [1, 2, 3, 4]
+    expected: [1, 2, 3, 4]
+  - bbox1: [0, 0, 10, 10]
+    bbox2: [5, 5, 15, 15]
+    expected: [5, 5, 10, 10]
+    as_np: true
+union:
+  - bbox1: [0, 0, 10, 10]
+    bbox2: [5, 5, 15, 15]
+    expected: [0, 0, 15, 15]
+  - bbox1: [0, 0, 2, 2]
+    bbox2: [5, 5, 7, 7]
+    expected: [0, 0, 7, 7]
+  - bbox1: [1, 2, 3, 4]
+    bbox2: [1, 2, 3, 4]
+    expected: [1, 2, 3, 4]
+  - bbox1: [0, 0, 10, 10]
+    bbox2: [5, 5, 15, 15]
+    expected: [0, 0, 15, 15]
+    as_np: true

@@ -1,0 +1,15 @@
+impact_eco:
+  - name: raster_and_vector
+    use: {jrc: true, floodam: true}
+    expected_files:
+      - dmgfac_hf_esawc_test.tif
+      - dmgfac_hf_oso23_test.tif
+      - dmg_hf_rpg_test.gpkg
+      - dmg_hf_bdtopo_test.gpkg
+      - dmg_hf_sirene_test.gpkg
+  - name: skips_vector_jrc
+    use: {jrc: true, floodam: true}
+    expect_log: "Skipping rpg x jrc"
+  - name: undefined_config_skips
+    use: {jrc: false, floodam: true}
+    absent_files: [dmg_hf_esawc_test.gpkg]

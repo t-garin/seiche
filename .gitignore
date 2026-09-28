@@ -1,0 +1,16 @@
+.venv/
+node_modules/
+.ruff_cache/
+logs/
+site/
+*.pyc
+.DS_Store
+tests/**/out
+pygeodes-config.json
+.coverage
+scalene-profile.json
+scalene-profile.html
+__marimo__
+docs/config.md
+docs/files_call_graph.svg
+tmp/

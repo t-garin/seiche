@@ -1,0 +1,104 @@
+commercial:
+  - id: surface
+    kwargs: {naf: "1011Z", surface: 100, n_emp: 5}
+    expected: 70537.106
+    is_nan: false
+  - id: surface_and_tefet
+    kwargs: {naf: "1011Z", surface: 100, tefet: "00"}
+    expected: 14854.706
+    is_nan: false
+  - id: unknown_tefet
+    kwargs: {naf: "1011Z", tefet: "NN"}
+    expected: 15591.6
+    is_nan: false
+  - id: no_surface_below_threshold
+    kwargs: {naf: "1011Z", n_emp: 5}
+    expected: 77958.0
+    is_nan: false
+  - id: above_threshold_nan
+    kwargs: {naf: "1011Z", n_emp: 100}
+    expected: null
+    is_nan: true
+  - id: above_threshold_min_price
+    kwargs: {naf: "1011Z", n_emp: 100, return_minimum_price_if_above_thresh: true}
+    expected: 1500000
+    is_nan: false
+  - id: public_functype
+    kwargs: {naf: "5310Z", n_emp: 5}
+    expected: 30.855
+    is_nan: false
+  - id: commercial_functype
+    kwargs: {naf: "6411Z", n_emp: 5}
+    expected: 46880.15
+    is_nan: false
+  - id: wip_functype
+    kwargs: {naf: "3600Z"}
+    expected: null
+    is_nan: true
+  - id: unknown_naf
+    kwargs: {naf: "9999Z"}
+    expected: null
+    is_nan: true
+housing:
+  - usages: ["Résidentiel", "Résidentiel", "Commercial", "Résidentiel"]
+    etats: ["En service", "En construction", "En service", "En service"]
+    n_etages: [1, 2, 3, 2]
+    n_logts: [1, 1, 4, 4]
+    expected: ["ise", "iae", "col"]
+  - usages: ["Résidentiel", "Résidentiel", "Résidentiel", "Résidentiel"]
+    etats: ["En service", "En service", "En service", "En service"]
+    n_etages: [1, 1, 0, .nan]
+    n_logts: [1, 1, 0, .nan]
+    expected: ["ise"]
+  - usages: ["Résidentiel", "Résidentiel", "Résidentiel", "Résidentiel"]
+    etats: ["En service", "En service", "En service", "En service"]
+    n_etages: [1, 1, 1, 2]
+    n_logts: [1, 1, 0, 0]
+    expected: ["ise"]
+sirene:
+  - rows:
+      - ["a", "1011Z", "A"]
+      - ["b", "6411Z", "A"]
+      - ["c", "5310Z", "A"]
+      - ["d", "1011Z", "F"]
+      - ["e", "9999Z", "A"]
+    geoms: [[0, 0, 50, 50], [50, 0, 100, 50], [0, 50, 50, 100], [50, 50, 100, 100], [0, 0, 25, 25]]
+    expected: ["a", "b", "c"]
+  - rows:
+      - ["a", "1011Z", "A"]
+      - ["b", "9999Z", "A"]
+    geoms: [[0, 0, 50, 50], [50, 0, 100, 50]]
+    expected: ["a"]
+init:
+  - key: a
+    expected: [wheat, corn, barley, otherCereals, colza, sunflower, otherOleaginous, otherIndustrial, orchard, grapevine, flowerVegetables, fodder, permanentGrasslands, temporaryGrasslands]
+  - key: h
+    expected_contains: [ise]
+  - key: datadir
+    expected: floodam
+read_precompiled:
+  - wrong_hash: true
+    raises: RuntimeError
+    match: sha256 mismatch
+agri_rpg:
+  - classes: [wheat, corn, colza, wheat]
+    surf_parc: [1.0, 1.0, 1.0, 1.0]
+    expected_dmg: [1034.43454655138, 785.646491051679, 785.646491051679, 1034.43454655138]
+  - classes: [wheat, wheat, wheat, wheat]
+    surf_parc: [1.0, 1.0, 1.0, 1.0]
+    nan_depth: true
+    expected_len: 3
+sirene_rejects:
+  - nomenclature: NAFRev1
+    raises: ValueError
+    match: Only NAFRev2
+commercial_rejects:
+  - kwargs: {naf: 1, max_depth: 0.5}
+    raises: TypeError
+  - kwargs: {naf: "1011Z", max_depth: "deep"}
+    raises: TypeError
+commercial_unknown_functype:
+  - naf: "9999Z"
+    functype: bogus
+    raises: ValueError
+    match: neither c nor p

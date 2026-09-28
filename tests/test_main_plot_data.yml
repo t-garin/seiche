@@ -1,0 +1,22 @@
+plot:
+  - name: all
+    autoplot: true
+    expected_pngs:
+      - dem_test.tif.png
+      - filosofi_hf_always_true_test.tif_hist.png
+      - filosofi_hf_always_true_test.tif_map.png
+      - ghslpop_hf_always_true_test.tif_hist.png
+      - ghslpop_hf_always_true_test.tif_map.png
+      - hzd_hf_test.tif_H.png
+      - hzd_hf_test.tif_T.png
+      - hzd_hf_test.tif_V.png
+      - lcv_esawc_test.tif.png
+      - lcv_oso23_test.tif.png
+      - lcv_rpg_test.gpkg.png
+  - name: autoplot_disabled
+    autoplot: false
+    expected_pngs: []
+save_hvplot:
+  - filename: 123
+    raises: TypeError
+    match: filename must be a str

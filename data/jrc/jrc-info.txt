@@ -1,0 +1,47 @@
+#
+# MaxDamage-Adjustment's parameters are kept as default
+# this version of the file has a sha256 checksum stored in JRC.SHA256CHECKSUM
+# and copied here 5b944b59167e6cf5215885cccd99fae762c40a2e6c9f8d5b5d2afdad2cf5ddad
+#
+# Precompiled CSVs live in data/jrc/precompiled/ (see tools/format_jrc.py).
+# Their sha256 manifest is data/jrc/precompiled/sha256.txt and is checked at
+# runtime by dmgfunc_jrc to detect corrupted CSVs.
+#
+
+
+
+Regions:
+- EU, Europe
+- NA, North America
+- SA, South and Central America
+- AS, Asia and Pacific
+- AF, Africa
+- OC, Oceania
+- GL, Global
+
+Classes: 
+- h, Residential buildings
+- c, Commercial buildings
+- i, Industrial buildings
+- t, Transport
+- r, Infrastructure - roads
+- a, Agriculture
+
+Max damages:
+- h, c, i
+    - building-structure,   building based max damage structure (€/m2 2010)
+    - building-content,     building based max damage content (€/m2 2010)
+    - building-total,       building based max damage total (€/m2 2010)
+    - landuse-total,        land-use based max damage total (€/m2 2010)
+    - object-total,         object based max damage total (€/object 2010)
+- a 
+    - maxdmg,               value per hectare (€/ha, 2010)
+    - area,                 total agricultural area in the country (sq km²)
+- r 
+    - maxdmg,               surfacic maxdamage (€/m2, 2010) 
+- t 
+    - maxdmg,               surfacic maxdamage (€/m2, 2010) 
+
+Units:
+- depth: m, meters
+

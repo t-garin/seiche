@@ -1,0 +1,118 @@
+states:
+  basic:
+    regex: '(\d{8})T(\d{6})'
+    filter_key: ".tif"
+    tifs:
+      - {name: Inf_20191210T175503_a.tif, value: 1, n: 2, y: 6300200}
+      - {name: Inf_20191210T175503_b.tif, value: 0, n: 2, y: 6299600}
+      - {name: Inf_20191217T174655_c.tif, value: 0}
+      - {name: Inf_20191218T174655_d.tif, value: 6}
+      - {name: Inf_20191219T000000_e.tif, value: 1, x: 0, y: 0}
+  ignored:
+    regex: '(\d{8})T(\d{6})'
+    filter_key: ".tif"
+    notes: true
+    files2ignore: "Inf_20191210T175503_a.tif\n"
+    tifs:
+      - {name: Inf_20191210T175503_a.tif, value: 1, n: 2, y: 6300200}
+      - {name: Inf_20191210T175503_b.tif, value: 0, n: 2, y: 6299600}
+      - {name: Inf_20191217T174655_c.tif, value: 0}
+      - {name: Inf_20191218T174655_d.tif, value: 6}
+      - {name: Inf_20191219T000000_e.tif, value: 1, x: 0, y: 0}
+  far:
+    regex: '(\d{8})T(\d{6})'
+    filter_key: ".tif"
+    tifs:
+      - {name: Inf_20191210T175503_f.tif, value: 1, x: 0, y: 0}
+get_bfms_paths_n_dates:
+  - state: basic
+    expected_len: 5
+    expected_dates: ["2019-12-10 17:55:03", "2019-12-10 17:55:03", "2019-12-17 17:46:55", "2019-12-18 17:46:55", "2019-12-19 00:00:00"]
+  - state: ignored
+    expected_len: 4
+    skip_names: ["Inf_20191210T175503_a.tif"]
+  - state: basic
+    sorted: true
+get_bfm_at_date:
+  - state: basic
+    date: "2019-12-10 17:55:03"
+    expected_unique: [0, 1]
+    has_nan: true
+  - state: basic
+    date: "2019-12-18 17:46:55"
+    expected_all_nan: true
+  - state: far
+    date: "2019-12-10 17:55:03"
+    expected: null
+generate_bfms_netcdfs:
+  - state: basic
+    expected_names: ["bfms_test_2019-12-10 17:55:03.nc", "bfms_test_2019-12-17 17:46:55.nc", "bfms_test_2019-12-18 17:46:55.nc"]
+    idempotent: true
+get_max_depth_from_duration:
+  - state: basic
+    mindate: "2019-12-01"
+    maxdate: "2019-12-31"
+    method: simple_a
+    dem_shape: [10, 10]
+    expected_min_ge: 0
+get_max_speed_from_dem:
+  - shape: [8, 8]
+get_duration_from_bfms:
+  - state: basic
+    mindate: "2019-12-01"
+    maxdate: "2019-12-31"
+    expected_min: 0
+    expected_max_gt: 0
+get_duration_from_bfms_rejects:
+  - bad: mindate
+    raises: TypeError
+    match: mindate must be a numpy datetime64
+  - bad: maxdate
+    raises: TypeError
+    match: maxdate must be a numpy datetime64
+is_bfm_valid:
+  - state: basic
+    expected: [true, false]
+filter_bfms:
+  - state: basic
+get_duration:
+  - dates: ["2020-01-01", "2020-01-03", "2020-01-05"]
+    values: [1, 1, 1]
+    mindate: "2019-12-31"
+    maxdate: "2020-01-06"
+    expected: 518400.0
+  - dates: ["2020-01-01", "2020-01-03", "2020-01-05"]
+    values: [0, 1, 1]
+    mindate: "2019-12-31"
+    maxdate: "2020-01-06"
+    expected: 345600.0
+  - dates: ["2020-01-01", "2020-01-03", "2020-01-05"]
+    values: [0, 0, 0]
+    mindate: "2019-12-31"
+    maxdate: "2020-01-06"
+    expected: 0.0
+  - dates: ["2020-01-01", "2020-01-03", "2020-01-05"]
+    values: [.nan, .nan, .nan]
+    mindate: "2019-12-31"
+    maxdate: "2020-01-06"
+    expected: 0.0
+  - dates: ["2020-01-01"]
+    values: [1]
+    mindate: "2020-01-02"
+    maxdate: "2020-01-06"
+    raises: ValueError
+    match: mindate must be before
+  - dates: ["2020-01-01"]
+    values: [1]
+    mindate: "2019-12-31"
+    maxdate: "2019-12-30"
+    raises: ValueError
+    match: maxdate must be after
+load_bfms_from_nc_files:
+  - state: basic
+    expected_time_n: 3
+    expected_sorted: true
+  - state: basic
+    crs_mismatch: true
+    raises: ValueError
+    match: EPSG mismatch

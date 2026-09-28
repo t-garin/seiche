@@ -1,0 +1,55 @@
+streamline:
+  - col: type
+    value: 3
+    col2keep: type
+    newcol: class
+    expected: [3, 3, 3, 3]
+  - col: usage_1
+    value: 7
+    col2keep: usage_1
+    newcol: lc
+    expected: [7, 7, 7, 7]
+  - col: type
+    value: forest
+    col2keep: type
+    newcol: class
+    expected: ["forest", "forest", "forest", "forest"]
+  - col: type
+    value: .nan
+    col2keep: type
+    newcol: class
+    expected: ["nan", "nan", "nan", "nan"]
+concat_hazard:
+  - seed: 0
+    n_cells: 100
+    pixel_size: 10
+    expected_means:
+      max_depth: 1.0965819651570472
+      max_speed: 0.7964525344129839
+      duration: 12.997422675969638
+  - seed: 0
+    n_cells: 100
+    pixel_size: 10
+    use_max_speed: false
+    use_duration: false
+    expected_columns: [geometry, max_depth]
+  - seed: 0
+    n_cells: 4
+    pixel_size: 10
+    index: [3, 1]
+    expected_index: [3, 1]
+concat_hazard_rejects:
+  - to_crs: 4326
+    raises: ValueError
+    match: CRS must match
+find_column:
+  - columns: [USAGE_1]
+    candidates: [USAGE_1, usage_1]
+    expected: USAGE_1
+  - columns: [usage_1]
+    candidates: [USAGE_1, usage_1]
+    expected: usage_1
+  - columns: [other]
+    candidates: [USAGE_1, usage_1]
+    raises: ValueError
+    match: None of

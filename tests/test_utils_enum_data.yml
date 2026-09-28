@@ -1,0 +1,66 @@
+enums:
+  Landcover: [bdtopo, esawc, oso23, rpg, sirene]
+  LandcoverType: [raster, vector]
+  DamageFunc: [jrc, floodam]
+  HazardSource: [slf, bfm]
+  PopDataset: [filosofi, ghslpop]
+  HciMode: [building, landuse, object]
+  JrcClass: [h, c, i, t, r, a]
+  SimpleMethod: [all, each]
+  DefendedMethod: [simple_a, simple_e, fwdet_n, fwdet_l, fwdet_c, hand_a, hand_e]
+  JrcRegion: [eu, na, sa, as, af, oc, gl]
+  FloodamAlea: [fluvial, maritime]
+  FloodamSeason: [automne, hiver, printemps, été]
+  HazardBand: [max_depth, max_speed, duration]
+  OutputFiles: [dem, hzd, duration, lcv, dmgfac, maxdmg, dmg, std, ghslpop, filosofi, report]
+hazard_band_indices:
+  - band: max_depth
+    index: 0
+  - band: max_speed
+    index: 1
+  - band: duration
+    index: 2
+output_names:
+  - member: dem
+    parts: {}
+    expected: dem_marmande_2019.tif
+  - member: duration
+    parts: {}
+    expected: duration_marmande_2019.tif
+  - member: hzd
+    parts: {nickname: slf1}
+    expected: hzd_slf1_marmande_2019.tif
+  - member: lcv
+    parts: {ext: tif, landcover: esawc}
+    expected: lcv_esawc_marmande_2019.tif
+  - member: lcv
+    parts: {ext: gpkg, landcover: rpg}
+    expected: lcv_rpg_marmande_2019.gpkg
+  - member: dmgfac
+    parts: {nickname: slf1, landcover: esawc}
+    expected: dmgfac_slf1_esawc_marmande_2019.tif
+  - member: std
+    parts: {nickname: slf1, landcover: esawc}
+    expected: std_slf1_esawc_marmande_2019.tif
+  - member: maxdmg
+    parts: {nickname: slf1, landcover: esawc}
+    expected: maxdmg_slf1_esawc_marmande_2019.tif
+  - member: dmg
+    parts: {nickname: slf1, landcover: esawc}
+    expected: dmg_slf1_esawc_marmande_2019.gpkg
+  - member: ghslpop
+    parts: {nickname: slf1, condition: is_above_30cm}
+    expected: ghslpop_slf1_is_above_30cm_marmande_2019.tif
+  - member: filosofi
+    parts: {nickname: slf1, condition: is_above_30cm}
+    expected: filosofi_slf1_is_above_30cm_marmande_2019.gpkg
+  - member: report
+    parts: {ext: typ}
+    expected: report_marmande_2019.typ
+  - member: report
+    parts: {ext: pdf}
+    expected: report_marmande_2019.pdf
+output_name_fallback:
+  - config: {param.expname: null, path.out: out}
+    config_path: marmande.yml
+    expected: dem_marmande.tif

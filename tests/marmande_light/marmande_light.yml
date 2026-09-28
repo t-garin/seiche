@@ -1,0 +1,70 @@
+param.autoplot: true
+param.autoreport: true
+param.bfm.flooded_threshold: 0
+param.bfm.target_resolution: 100 # in meters since ...
+param.cold_run: true
+param.defended.hand_threshold: null
+param.bfm.end_date: 2019-12-31
+param.EPSG: 2154
+param.expname: marmande_light
+param.floodam.alea: fluvial
+param.floodam.season: hiver
+param.jrc.a3: FRA
+param.jrc.region: eu
+param.slf.pixel_size: 100 # in meters since we have projected EPSGs (2154, 27563)
+param.bfm.start_date: 2019-12-01
+path.inp: ./tests/marmande_light
+path.inp.POLY: area_of_interest.geojson
+path.inp.bfm.files2ignore: null
+path.inp.bfm.filter_key: .tif
+path.inp.bfm.regex: "(\\d{8})T(\\d{6})"
+path.inp.bfm.root: floodml
+path.inp.dem.EPSG: null
+path.inp.dem.filter_key: dem_30m.tif
+path.inp.dem.root: .
+path.inp.lcv.bdtopo:
+    - bdtopo2023-batiment.gpkg
+path.inp.lcv.esawc:
+    - esawc.tif
+path.inp.lcv.oso23:
+    - oso23.tif
+path.inp.lcv.rpg:
+    - rpg2019.shp
+path.inp.lcv.sirene:
+    - sirene.csv
+path.inp.pop.filosofi: null
+path.inp.pop.ghslpop:
+    - ghslpop.tif
+path.inp.slf:
+    - filepath: hf_k17_2019_light.slf
+      epsg: 2154
+      nickname: hf
+      xspeedVarname: VITESSE U
+      yspeedVarname: VITESSE V
+      depthVarname: HAUTEUR D'EAU
+      freesurfVarname: SURFACE LIBRE
+      depthThreshold: 0.05
+          
+    - filepath: lf_fr1_2019_light.slf
+      epsg: 27563
+      nickname: lf
+      xspeedVarname: VITESSE U
+      yspeedVarname: VITESSE V
+      depthVarname: HAUTEUR D'EAU
+      freesurfVarname: SURFACE LIBRE
+      depthThreshold: 0.05
+
+path.out: ./tests/marmande_light/out
+use.defended.fwdet_c: false
+use.defended.fwdet_l: true
+use.defended.fwdet_n: false
+use.defended.hand_a: false
+use.defended.hand_e: false
+use.defended.simple_a: false
+use.defended.simple_e: false
+use.dmg.floodam: true
+use.dmg.jrc: true
+param.pop.conditions:
+    always_true: "True"
+    is_above_30cm: "h > 0.3"
+    is_touched_by_water: "h > 0"

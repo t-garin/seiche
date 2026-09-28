@@ -1,0 +1,84 @@
+site_name: Seiche - Documentation
+
+nav:
+  - Home: index.md
+  - Example: example.md
+  - Getting Started: getting_started.md
+  - Configuration: config.md
+  - Nomenclature: nomenclature.md
+  - Test cases:
+      - Descriptions: tests.md
+      - Marmande: test_marmande.md
+      - St-Omer: test_stomer.md
+      - Chinon: test_chinon.md
+      - Ohio: test_ohio.md
+  - For developers:
+      - Contributing: contributing.md
+      - Flow: flow.md
+
+theme:
+  name: material
+  font:
+    text: Atkinson Hyperlegible
+    code: JetBrains Mono
+  palette:
+    # Palette toggle for light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+
+    # Palette toggle for dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+
+  logo: squid-emoji-256x256.png
+  favicon: squid-emoji.ico
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.path
+    - navigation.indexes
+
+plugins:
+  - search
+  # https://github.com/tlambert03/mkdocs-api-autonav
+  - mkdocstrings:
+      handlers:
+        python:
+          inventories:
+            - https://docs.python.org/3/objects.inv
+          options:
+            docstring_section_style: list # or "table"
+            docstring_style: "numpy"
+            filters: null
+            heading_level: 1
+            merge_init_into_class: true
+            parameter_headings: true
+            separate_signature: true
+            show_root_heading: false
+            show_signature_annotations: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            summary: true
+  - api-autonav:
+      modules: ["src", "tests", "tools"]
+      exclude_private: false
+      nav_section_title: "For developers"
+
+use_directory_urls: false
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences

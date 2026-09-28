@@ -1,0 +1,78 @@
+param.autoplot: true
+param.bfm.flooded_threshold: 0
+param.bfm.target_resolution: 10
+param.cold_run: false
+param.defended.hand_threshold: null
+param.end_date: 2019-12-31
+param.EPSG: 2154
+param.expname: marmande
+param.floodam.alea: fluvial
+param.floodam.season: hiver
+param.jrc.a3: FRA
+param.jrc.region: eu
+param.slf.pixel_size: 10
+param.start_date: 2019-12-08
+path.inp: /archive2/globc/seiche/marmande_2019_inp/
+path.inp.POLY: marmande_aoi.geojson
+path.inp.bfm.files2ignore: null
+path.inp.bfm.filter_key: .tif
+path.inp.bfm.regex: "(\\d{8})T(\\d{6})"
+path.inp.bfm.root: floodml
+path.inp.dem.EPSG: null
+path.inp.dem.filter_key: rge_alti.tif
+path.inp.dem.root: .
+path.inp.ins.parquet: null
+path.inp.ins.stations: null
+path.inp.lcv.bdtopo: 
+  - bdtopo_bati_2019-12.shp
+path.inp.lcv.esawc:
+  - esawc_2020.tif
+path.inp.lcv.oso23:
+  - oso_2019.tif 
+path.inp.lcv.rpg:
+  - rpg_2020.shp
+path.inp.lcv.sirene: 
+  - sirene_2019-12.csv
+path.inp.pop.filosofi:
+  - filosofi_2019.gpkg
+path.inp.pop.ghslpop:
+  - ghslpop_2020.tif
+path.inp.slf:
+
+  - filepath:        hf_2019_k17.slf
+    epsg:            2154
+    nickname:        hf_2019_k17
+    xspeedVarname:   VITESSE U
+    yspeedVarname:   VITESSE V
+    depthVarname:    HAUTEUR D'EAU
+    freesurfVarname: SURFACE LIBRE
+    depthThreshold:  0.05
+
+  - filepath:        lf_2019_fr1.slf
+    epsg:            27563
+    nickname:        lf_2019_fr1
+    xspeedVarname:   VITESSE U
+    yspeedVarname:   VITESSE V
+    depthVarname:    HAUTEUR D'EAU
+    freesurfVarname: SURFACE LIBRE
+    depthThreshold:  0.05
+
+path.out: /archive2/globc/seiche/marmande_2019_out/
+use.defended.flexth: false
+use.defended.fwdet_c: true
+use.defended.fwdet_l: true
+use.defended.fwdet_n: true
+use.defended.hand_a: false
+use.defended.hand_e: false
+use.defended.inflos: false
+use.defended.simple_a: true
+use.defended.simple_e: true
+use.defended.tvd-a: false
+use.defended.tvd-e: false
+use.defended.waser: false
+use.dmg.floodam: true
+use.dmg.jrc: true
+param.pop.conditions:
+    always_true: "True"
+    is_above_30cm: "h > 0.3"
+    is_touched_by_water: "h > 0"

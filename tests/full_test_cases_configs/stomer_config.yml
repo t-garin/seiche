@@ -1,0 +1,59 @@
+param.autoplot: true
+param.bfm.flooded_threshold: 0
+param.bfm.target_resolution: 10
+param.cold_run: false
+param.defended.hand_threshold: 200
+param.end_date: 2024-01-31
+param.EPSG: 2154
+param.expname: stomer
+param.floodam.alea: fluvial
+param.floodam.season: automne
+param.jrc.a3: FRA
+param.jrc.region: eu
+param.slf.pixel_size: null
+param.start_date: 2023-10-01
+path.inp: /archive2/globc/seiche/stomer_inp/
+path.inp.POLY: Perimetre_SmageAa.shp
+path.inp.bfm.files2ignore: null
+path.inp.bfm.filter_key: POST
+path.inp.bfm.regex: "(\\d{8})T(\\d{6})"
+path.inp.bfm.root: floodml_preprocessed
+path.inp.dem.EPSG: null
+path.inp.dem.filter_key: demglo30_2011.tif
+path.inp.dem.root: .
+path.inp.ins.parquet: null
+path.inp.ins.stations: null
+path.inp.lcv.bdtopo:
+  - bdtopo_2023-09.gpkg
+path.inp.lcv.esawc:
+  - esawc_2021.tif
+path.inp.lcv.oso23:
+  - oso_2023.tif
+path.inp.lcv.rpg:
+  - rpg_2024.gpkg
+path.inp.lcv.sirene:
+  - sirene_2023-10.csv
+path.inp.pop.filosofi:
+  - filosofi_2021.gpkg
+path.inp.pop.ghslpop:
+  - ghslpop_2025.tif
+path.inp.slf: null
+path.out: /archive2/globc/seiche/stomer_out/
+use.defended.flexth: false
+use.defended.fwdet_c: true
+use.defended.fwdet_l: true
+use.defended.fwdet_n: true
+use.defended.hand_a: false
+use.defended.hand_e: false
+use.defended.inflos: false
+use.defended.simple_a: true
+use.defended.simple_e: true
+use.defended.tvd-a: false
+use.defended.tvd-e: false
+use.defended.waser: false
+use.dmg.floodam: true
+use.dmg.jrc: true
+param.pop.conditions:
+    always_true: "True"
+    is_above_30cm: "h > 0.3"
+    is_touched_by_water: "h > 0"
