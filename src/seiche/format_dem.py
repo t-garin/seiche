@@ -2,6 +2,7 @@
 Generate or load a DEM as a rioxarray DataArray.
 """
 
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -11,13 +12,16 @@ import rioxarray as rxr
 import xarray as xr
 from rioxarray.merge import merge_arrays
 
-from seiche.utils_da import reproj_clip
-from seiche.utils_enum import OutputFiles
+from seiche.utils_da import merge_clipped_rasters, reproj_clip
+from seiche.utils_enum import HazardSource, OutputFiles
 from seiche.utils_qol import asinstance
 from seiche.utils_state import (
     read_epsg_from_state,
+    read_hazards_from_state,
     read_poly_from_state,
 )
+
+logger = logging.getLogger(__name__)
 
 
 def generate_dem_from_tifs(
@@ -28,12 +32,8 @@ def generate_dem_from_tifs(
     """
     Generate a DEM from a list of GeoTIFF filepaths.
     """
-    arrays = [
-        reproj_clip(asinstance(rxr.open_rasterio(path), xr.DataArray), epsg, poly)
-        for path in filepaths
-    ]
     return asinstance(
-        merge_arrays([a for a in arrays if a is not None])
+        merge_clipped_rasters(filepaths, epsg, poly)
         .astype(float)
         .rio.write_nodata(np.nan),
         xr.DataArray,
@@ -67,6 +67,9 @@ def generate_or_load_dem(state: dict[str, Any]) -> dict[str, Any]:
     """
     Generate or load the DEM and store its path in the state.
     """
+    if read_hazards_from_state(state) == [HazardSource.hvt]:
+        logger.info("Skipping DEM generation: user-provided hvt hazards don't need it")
+        return state
     dem_savepath = OutputFiles.dem.savepath(state)
     if not dem_savepath.exists():
         epsg = read_epsg_from_state(state)

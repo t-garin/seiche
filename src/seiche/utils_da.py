@@ -4,6 +4,7 @@ Contains functions for handling xarray DataArrays.
 
 import json
 import logging
+from collections.abc import Sequence
 from math import ceil
 from pathlib import Path
 
@@ -72,7 +73,7 @@ def reproj_clip(
 
 
 def merge_clipped_rasters(
-    paths: list[str],
+    paths: Sequence[str | Path],
     epsg: int,
     poly: gpd.GeoDataFrame,
 ) -> xr.DataArray:
@@ -81,7 +82,7 @@ def merge_clipped_rasters(
 
     Parameters
     ----------
-    paths : list[str]
+    paths : Sequence[str | Path]
         List of file paths to raster files.
 
     epsg : int

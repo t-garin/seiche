@@ -2,7 +2,7 @@ enums:
   Landcover: [bdtopo, esawc, oso23, rpg, sirene]
   LandcoverType: [raster, vector]
   DamageFunc: [jrc, floodam]
-  HazardSource: [slf, bfm]
+  HazardSource: [slf, bfm, hvt]
   PopDataset: [filosofi, ghslpop]
   HciMode: [building, landuse, object]
   JrcClass: [h, c, i, t, r, a]

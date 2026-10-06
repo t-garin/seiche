@@ -21,6 +21,7 @@ from seiche.dmgfunc_jrc import (
     JRC,
     _read_precompiled,
 )
+from seiche.utils_da import generate_empty_da_from_bounds
 from seiche.utils_enum import HciMode, JrcClass, JrcRegion
 
 jrc = JRC()
@@ -165,6 +166,75 @@ def test_get_dmg_fac_raster_lc(case: dict) -> None:
     np.testing.assert_allclose(dmgs.values[0, :, 0], case["expected_col0"], atol=1e-5)
 
 
+def _reference_linear_combination(
+    jrc: JRC,
+    class_vector: np.ndarray,
+    depths: np.ndarray,
+    region: JrcRegion,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Direct ``np.interp`` reference for the class-vector damage/std combination.
+
+    Mirrors ``_get_dmgfac_classe_interpolators``: the damage column falls back
+    to the global one when the regional column is missing, while a missing
+    standard deviation column yields NaN.
+    """
+    dmg = np.zeros(np.shape(depths), dtype=float)
+    std = np.zeros(np.shape(depths), dtype=float)
+    for coef, classe in zip(class_vector, jrc.CLASSES, strict=True):
+        if coef == 0:
+            continue
+        row = jrc._dmgfac[jrc._dmgfac.index == classe]
+        refdepth = row["depth"].to_numpy().astype(float)
+        col = f"dmg{region.upper()}"
+        if col not in row.columns:
+            col = "dmgGL"
+        dmg += coef * np.interp(
+            depths, refdepth, row[col].to_numpy().astype(float)
+        )
+        scol = f"std{region.upper()}"
+        if scol in row.columns:
+            std += coef * np.interp(
+                depths, refdepth, row[scol].to_numpy().astype(float)
+            )
+        else:
+            std += coef * np.full(np.shape(depths), np.nan)
+    return dmg, std
+
+
+def test_raster_lc_matches_interp_reference() -> None:
+    """
+    The vectorized raster path equals a direct ``np.interp`` reference.
+
+    Covers the mixed class vector over several depths, NaN depth propagation
+    and the all-zero class vector (scalar 0) path.
+    """
+    depths = np.array([0.1, 0.5, 1.2, np.nan, 0.5])
+    landcover = _empty_raster((5, 5), 10, 2154).copy(
+        data=[[[50] * 5] * 4 + [[0] * 5]]
+    )
+    max_depth = _empty_raster((5, 5), 10, 2154).copy(
+        data=[[[d] * 5 for d in depths]]
+    )
+    dmgs, stds = jrc.get_dmg_fac_raster_lc(
+        landcover, max_depth, MAP_JRC, JrcRegion.eu
+    )
+    mixed_dmg, mixed_std = _reference_linear_combination(
+        jrc, np.array(MAP_JRC[50]), depths[:4], JrcRegion.eu
+    )
+    zero_dmg, zero_std = _reference_linear_combination(
+        jrc, np.array(MAP_JRC[0]), depths[4:], JrcRegion.eu
+    )
+    np.testing.assert_allclose(
+        dmgs.values[0, :, 0], np.concatenate([mixed_dmg, zero_dmg]), equal_nan=True
+    )
+    np.testing.assert_allclose(
+        stds.values[0, :, 0], np.concatenate([mixed_std, zero_std]), equal_nan=True
+    )
+    assert np.isnan(dmgs.values[0, 3, 0])  # NaN depth propagates
+    assert dmgs.values[0, 4, 0] == 0.0  # all-zero class vector (scalar 0)
+
+
 @pytest.mark.parametrize("case", VECTOR_LC_CASES)
 def test_get_dmg_fac_vector_lc(case: dict) -> None:
     """Vector landcover gets per-row dmg and std columns."""
@@ -178,6 +248,37 @@ def test_get_dmg_fac_vector_lc(case: dict) -> None:
     out = jrc.get_dmg_fac_vector_lc(landcover, hazard, "class", map_jrc, JrcRegion.eu)
     assert {"class", "dmg", "std", "geometry"}.issubset(set(out.columns))
     np.testing.assert_allclose(out["dmg"].to_numpy(), case["expected_dmg"])
+
+
+def test_get_dmg_fac_vector_lc_rejects_disjoint_bbox() -> None:
+    """A hazard raster disjoint from the landcover extent raises a ValueError."""
+    landcover = synthetic_empty_vector(n_cells=4, pixel_size=50)
+    hazard = generate_empty_da_from_bounds(
+        (1000, 1000, 1100, 1100), 50, 2154, n_bands=3
+    )
+    with pytest.raises(ValueError, match="do not intersect"):
+        jrc.get_dmg_fac_vector_lc(landcover, hazard, "class", MAP_JRC, JrcRegion.eu)
+
+
+def test_get_dmg_fac_vector_lc_mixed_class() -> None:
+    """
+    Vector landcover supports mixed class vectors (array-safe combination).
+
+    The mixed-class linear combination must accept a pandas Series of depths,
+    matching the direct ``np.interp`` reference.
+    """
+    map_jrc = {**MAP_JRC, 50: [0.8, 0.1, 0.1, 0.0, 0.0, 0.0]}
+    landcover = synthetic_empty_vector(n_cells=4, pixel_size=50)
+    landcover["class"] = [50, 50, 0, 50]
+    hazard = _empty_raster((2, 2), 50, 2154, n_bands=3)
+    hazard = hazard.copy(
+        data=[np.full((2, 2), 0.5), np.zeros((2, 2)), np.zeros((2, 2))]
+    )
+    out = jrc.get_dmg_fac_vector_lc(landcover, hazard, "class", map_jrc, JrcRegion.eu)
+    expected = _reference_linear_combination(
+        jrc, np.array(map_jrc[50]), np.array([0.5]), JrcRegion.eu
+    )[0][0]
+    np.testing.assert_allclose(out["dmg"].to_numpy(), [expected, expected, 0.0, expected])
 
 
 @pytest.mark.parametrize("case", MAX_DMG_RASTER_CASES)

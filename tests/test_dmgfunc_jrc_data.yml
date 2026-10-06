@@ -69,7 +69,8 @@ read_precompiled:
     match: sha256 mismatch
 raster_lc:
   - rows: [50, 40, 50, 40, 0]
-    expected_col0: [0.22998046875, 0.300048828125, 0.22998046875, 0.300048828125, 0.0]
+    # full-precision values (the previous float16-rounded pins lost ~3 sig digits)
+    expected_col0: [0.23000000000000004, 0.3, 0.23000000000000004, 0.3, 0.0]
   - rows: [99, 99, 99, 99, 99]
     expected_all_nan: true
 vector_lc:

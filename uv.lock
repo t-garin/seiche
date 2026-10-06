@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.13"
 resolution-markers = [
     "python_full_version >= '3.14' and platform_machine == 'ARM64' and sys_platform == 'win32'",
@@ -2472,7 +2472,7 @@ wheels = [
 [[package]]
 name = "seiche"
 version = "0.0.dev0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "dask" },
     { name = "exactextract" },
@@ -2485,6 +2485,7 @@ dependencies = [
     { name = "pysheds" },
     { name = "pyyaml" },
     { name = "rioxarray" },
+    { name = "shapely" },
     { name = "typst" },
     { name = "xarray" },
 ]
@@ -2523,6 +2524,7 @@ requires-dist = [
     { name = "pysheds", git = "https://github.com/pysheds/pysheds.git" },
     { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "rioxarray", specifier = ">=0.21.0" },
+    { name = "shapely", specifier = ">=2.0" },
     { name = "typst", specifier = ">=0.15.0" },
     { name = "xarray", specifier = ">=2025.11.0" },
 ]

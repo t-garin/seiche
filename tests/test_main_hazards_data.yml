@@ -3,9 +3,11 @@ generate_hazard:
     expected_keys: [lf, lf_from_freesurf]
   - source: bfm
     expected_keys: [simple_a]
+  - source: hvt
+    expected_keys: [hvt]
   - source: unknown
     raises: ValueError
-    match: "should be 'bfm' or 'slf'"
+    match: "should be 'bfm', 'slf' or 'hvt'"
 generate_hazard_from_bands:
   - fillna0: true
     expected_all_zero: true
@@ -37,6 +39,22 @@ generate_bfm_hazard:
     methods: {}
     expected_keys: [simple_a]
     reuse_duration: true
-generate_bfm_duration:
-  - mindate: "2019-12-01"
-    maxdate: "2019-12-31"
+generate_hvt_hazard:
+  - name: happy_path
+    expected_keys: [hvt]
+    check_bands: true
+  - name: jrc_only
+    use: {floodam: false, jrc: true}
+    expected_keys: [hvt]
+    check_bands: true
+  - name: rejects_one_band
+    n_bands: 1
+    raises: ValueError
+    match: "3 bands"
+  - name: rejects_two_bands
+    n_bands: 2
+    raises: ValueError
+    match: "3 bands"
+  - name: loads_existing
+    expected_keys: [hvt]
+    loads_existing: true

@@ -55,8 +55,6 @@ get_max_depth_from_duration:
     method: simple_a
     dem_shape: [10, 10]
     expected_min_ge: 0
-get_max_speed_from_dem:
-  - shape: [8, 8]
 get_duration_from_bfms:
   - state: basic
     mindate: "2019-12-01"

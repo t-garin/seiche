@@ -11,12 +11,9 @@ be resumed from the last completed part.
 """
 
 import logging
-import sys
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
-
-sys.path.append("src")
 
 from seiche.format_dem import generate_or_load_dem
 from seiche.main_hazards import generate_hazard

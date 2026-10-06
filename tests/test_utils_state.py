@@ -11,10 +11,12 @@ from shapely.geometry import box
 
 from generate_synthetic_data import load_test_data, run_case
 
+from seiche.utils_enum import HazardSource
 from seiche.utils_state import (
     get_config,
     read_epsg_from_state,
     read_expname_from_state,
+    read_hazards_from_state,
     read_pop_conditions_from_state,
     read_use_variables_from_state,
 )
@@ -27,6 +29,7 @@ EPSG_CASES = load_test_data("test_utils_state_data.yml", "epsg")
 USE_VARIABLES_CASES = load_test_data("test_utils_state_data.yml", "use_variables")
 POP_CONDITIONS_CASES = load_test_data("test_utils_state_data.yml", "pop_conditions")
 GET_CONFIG_CASES = load_test_data("test_utils_state_data.yml", "get_config")
+HAZARDS_CASES = load_test_data("test_utils_state_data.yml", "hazards")
 
 
 def _make_state(tmp_path: Path, **overrides: object) -> dict[str, object]:
@@ -100,3 +103,12 @@ def test_get_config(tmp_path: Path, case: dict) -> None:
     loaded = get_config(config_path)
     assert loaded["path.out"] == case["expected"]["path.out"]
     assert loaded["param.EPSG"] == case["expected"]["param.EPSG"]
+
+
+@pytest.mark.parametrize("case", HAZARDS_CASES, ids=[c["name"] for c in HAZARDS_CASES])
+def test_read_hazards_from_state(tmp_path: Path, case: dict) -> None:
+    """The configured hazard sources are read from the config."""
+    state = _make_state(tmp_path, **case["overrides"])
+    assert read_hazards_from_state(state) == [
+        HazardSource(m) for m in case["expected"]
+    ]

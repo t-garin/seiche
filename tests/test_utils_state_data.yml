@@ -40,3 +40,19 @@ get_config:
   - template: false
     raises: ValueError
     match: not well formatted
+hazards:
+  - name: none
+    overrides: {path.inp.slf: null, path.inp.bfm.root: null, path.inp.hvt: null}
+    expected: []
+  - name: slf_only
+    overrides: {path.inp.slf: [{nickname: lf}], path.inp.bfm.root: null, path.inp.hvt: null}
+    expected: [slf]
+  - name: bfm_only
+    overrides: {path.inp.slf: null, path.inp.bfm.root: floodml, path.inp.hvt: null}
+    expected: [bfm]
+  - name: hvt_only
+    overrides: {path.inp.slf: null, path.inp.bfm.root: null, path.inp.hvt: [{nickname: hvt, filepath: hvt.tif}]}
+    expected: [hvt]
+  - name: all
+    overrides: {path.inp.slf: [{nickname: lf}], path.inp.bfm.root: floodml, path.inp.hvt: [{nickname: hvt, filepath: hvt.tif}]}
+    expected: [slf, bfm, hvt]

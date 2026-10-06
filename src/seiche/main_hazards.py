@@ -16,12 +16,11 @@ from seiche.format_bfm import (
     generate_bfms_netcdfs,
     get_duration_from_bfms,
     get_max_depth_from_duration,
-    get_max_speed_from_dem,
     load_bfms_from_nc_files,
 )
 from seiche.format_slf import Slf
-from seiche.utils_da import reproj_clip
-from seiche.utils_enum import HazardSource, OutputFiles
+from seiche.utils_da import empty_copy_from_da, reproj_clip
+from seiche.utils_enum import HazardBand, HazardSource, OutputFiles
 from seiche.utils_qol import asinstance, require
 from seiche.utils_state import (
     read_defended_methods_from_state,
@@ -38,16 +37,21 @@ def generate_hazard(state: dict[str, Any]) -> dict[str, Any]:
     """
     Generate the hazard rasters and store their paths in the state.
     """
-    dem = asinstance(rxr.open_rasterio(state["dem"]["path"]), xr.DataArray)
+    methods = read_hazards_from_state(state)
+    dem = None
+    if HazardSource.slf in methods or HazardSource.bfm in methods:
+        dem = asinstance(rxr.open_rasterio(state["dem"]["path"]), xr.DataArray)
     hazard = {}
-    for method in read_hazards_from_state(state):
+    for method in methods:
         match method:
             case HazardSource.bfm:
-                hazard.update(generate_bfm_hazard(dem, state))
+                hazard.update(generate_bfm_hazard(require(dem), state))
             case HazardSource.slf:
-                hazard.update(generate_slf_hazard(dem, state))
+                hazard.update(generate_slf_hazard(require(dem), state))
+            case HazardSource.hvt:
+                hazard.update(generate_hvt_hazard(state))
             case _:
-                msg = "Hazard method should be 'bfm' or 'slf', not {method}"
+                msg = "Hazard method should be 'bfm', 'slf' or 'hvt', not {method}"
                 raise ValueError(msg)
     del dem
     hazard_paths = {
@@ -194,20 +198,52 @@ def generate_slf_hazard(
     return hazard
 
 
-def _generate_bfm_duration(
-    paths: list[str | Path],
-    savepath: Path | str,
-    mindate: np.datetime64,
-    maxdate: np.datetime64,
-    target_resolution: float = 10.0,
-) -> None:
+def generate_hvt_hazard(state: dict[str, Any]) -> dict[str, Any]:
     """
-    Docstring to be made.
+    Generate hazard rasters from user-provided 3-band H/V/T rasters.
+
+    The input raster bands must be, in order: H (max water depth), V (max
+    water velocity) and T (flood duration). The bands are combined with
+    :func:`generate_hazard_from_bands`, which reprojects and clips them to the
+    study area, so no DEM or hydrodynamic model output is needed.
     """
-    paths2keep = filter_bfms(paths)
-    bfms = load_bfms_from_nc_files(paths2keep, target_resolution)
-    duration = get_duration_from_bfms(bfms, mindate, maxdate)
-    duration.rio.to_raster(savepath)
+    hazard = {}
+    for hvt_config in state["config"]["path.inp.hvt"]:
+        nickname = hvt_config["nickname"]
+        logger.info("Processing hvt: %s", nickname)
+
+        savepath = OutputFiles.hzd.savepath(state, nickname=nickname)
+
+        if savepath.exists():
+            hazard[nickname] = asinstance(rxr.open_rasterio(savepath), xr.DataArray)
+            continue
+
+        hvt = asinstance(
+            rxr.open_rasterio(
+                Path(state["config"]["path.inp"]) / hvt_config["filepath"],
+            ),
+            xr.DataArray,
+        )
+        n_bands = len(list(HazardBand))
+        if hvt.shape[0] != n_bands:
+            msg = (
+                f"hvt raster '{hvt_config['filepath']}' must have {n_bands} bands "
+                f"(H, V, T), got {hvt.shape[0]}"
+            )
+            raise ValueError(msg)
+
+        hazard[nickname] = generate_hazard_from_bands(
+            max_depth=hvt.isel(band=0),
+            max_speed=hvt.isel(band=1),
+            duration=hvt.isel(band=2),
+            state=state,
+        )
+        hazard[nickname].rio.to_raster(savepath)
+        # deletes it from memory to free memory, then lazy loads the file back
+        del hazard[nickname]
+        hazard[nickname] = asinstance(rxr.open_rasterio(savepath), xr.DataArray)
+
+    return hazard
 
 
 def generate_bfm_hazard(
@@ -225,22 +261,24 @@ def generate_bfm_hazard(
 
     if not duration_savepath.exists():
         logger.info("Duration file not found, generating it...")
-        _generate_bfm_duration(
-            paths=list(Path(savedir).glob("*.nc")),
-            savepath=duration_savepath,
-            mindate=pd.Timestamp(
-                state["config"]["param.bfm.start_date"]
-            ).to_datetime64(),
-            maxdate=pd.Timestamp(state["config"]["param.bfm.end_date"]).to_datetime64(),
-            target_resolution=state["config"]["param.bfm.target_resolution"],
+        paths2keep = filter_bfms(list(Path(savedir).glob("*.nc")))
+        bfms = load_bfms_from_nc_files(
+            paths2keep,
+            state["config"]["param.bfm.target_resolution"],
         )
+        duration = get_duration_from_bfms(
+            bfms,
+            pd.Timestamp(state["config"]["param.bfm.start_date"]).to_datetime64(),
+            pd.Timestamp(state["config"]["param.bfm.end_date"]).to_datetime64(),
+        )
+        duration.rio.to_raster(duration_savepath)
 
     duration = asinstance(rxr.open_rasterio(duration_savepath), xr.DataArray)
 
     # -------------------------------------------------------------------------
 
     # 3. Compute speed (not really)
-    max_speed = get_max_speed_from_dem(dem)
+    max_speed = empty_copy_from_da(dem)
 
     # -------------------------------------------------------------------------
 

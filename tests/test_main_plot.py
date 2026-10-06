@@ -6,9 +6,14 @@ import warnings
 from pathlib import Path
 
 import hvplot.pandas  # noqa: F401 - registers the polygon hvplot backend
+import hvplot.xarray
 import matplotlib.colors as mcolors
 import numpy as np
 import pytest
+import xarray as xr
+from matplotlib.transforms import Bbox
+
+from holoviews.plotting.mpl.renderer import MPLRenderer
 
 from generate_synthetic_data import (
     load_test_data,
@@ -75,6 +80,8 @@ def _state(tmp_path: Path, **overrides: object) -> dict[str, object]:
 def test_plot(tmp_path: Path, case: dict) -> None:
     """plot() renders (or skips) the configured plots as pngs."""
     state = _state(tmp_path, **{"param.autoplot": case["autoplot"]})
+    if case.get("no_dem"):
+        (tmp_path / "out" / "dem_test.tif").unlink()
     plot(state)
     pngs = sorted(p.name for p in (tmp_path / "out").glob("*.png"))
     assert pngs == sorted(case["expected_pngs"])
@@ -85,6 +92,23 @@ def test_save_hvplot_typeerror(tmp_path: Path, case: dict) -> None:
     """_save_hvplot rejects a non-string filename."""
     state = _state(tmp_path)
     run_case(case, lambda: _save_hvplot(state, fig=object(), filename=case["filename"]))
+
+
+def test_save_hvplot_clears_renderer_bbox_cache(tmp_path: Path) -> None:
+    """
+    _save_hvplot clears the holoviews tight-bbox cache before saving.
+
+    Holoviews caches tight bounding boxes keyed by the matplotlib figure id
+    and never clears them; a new figure that reuses a dead figure's id would
+    inherit its bbox and render non-deterministic PNG margins. The stale
+    entry must be dropped on each save.
+    """
+    state = _state(tmp_path)
+    hvplot.extension("matplotlib")
+    fig = xr.DataArray(np.ones((5, 5)), dims=("y", "x"), name="_").hvplot()
+    MPLRenderer.drawn[987654321] = Bbox([[0.0, 0.0], [1.0, 1.0]])
+    _save_hvplot(state, fig, "cache_regression")
+    assert 987654321 not in MPLRenderer.drawn
 
 
 def test_plot_rpg_colors_map_exactly_to_code_group(monkeypatch, tmp_path):

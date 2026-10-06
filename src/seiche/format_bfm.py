@@ -5,7 +5,6 @@ Extracts data from BFMs, uses DEFENDED, formats everyting in xr.DataArray.
 import logging
 import re
 from collections.abc import Iterator
-from functools import reduce
 from itertools import compress
 from pathlib import Path
 from typing import Any
@@ -15,17 +14,16 @@ import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import rioxarray as rxr
+import shapely.ops
 import xarray as xr
 from rioxarray.merge import merge_arrays
 
 from seiche.defended import defended
 from seiche.utils_da import (
-    empty_copy_from_da,
     generate_empty_da_from_bounds,
     reproj_clip,
 )
 from seiche.utils_enum import DefendedMethod
-from seiche.utils_geom import bbox_union
 from seiche.utils_qol import asinstance
 from seiche.utils_state import (
     read_epsg_from_state,
@@ -154,9 +152,10 @@ def get_bfm_at_date(
             if bfm is not None:
                 yield bfm
 
-    if next(bfms_yielder(), None) is None:
+    bfms = list(bfms_yielder())
+    if not bfms:
         return None
-    bfm = merge_arrays(list(bfms_yielder()))
+    bfm = merge_arrays(bfms)
     return (
         bfm.where(
             (bfm != bfm.rio.nodata) & (bfm != BFM_NO_DATA_6) & (bfm != BFM_NO_DATA_7),
@@ -212,15 +211,6 @@ def get_max_depth_from_duration(
 
     # remove negative values that make no physical sense
     return max_depth.where(max_depth >= 0, other=0)
-
-
-def get_max_speed_from_dem(dem: xr.DataArray) -> xr.DataArray:
-    """
-    Compute the max speed from the bfms.
-
-    No way of knowing the speed from the bfms: it is always nan.
-    """
-    return empty_copy_from_da(dem)
 
 
 def get_duration_from_bfms(
@@ -416,7 +406,7 @@ def load_bfms_from_nc_files(
 
     # template bbox at the union of all bboxes
     bboxes = [xr.open_dataarray(path).rio.bounds() for path in paths]
-    w, s, e, n = reduce(bbox_union, bboxes)
+    w, s, e, n = shapely.ops.unary_union([shapely.box(*b) for b in bboxes]).bounds
 
     # finally create the template
     template = generate_empty_da_from_bounds((w, s, e, n), target_resolution, epsg)

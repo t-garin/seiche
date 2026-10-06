@@ -34,49 +34,14 @@ import pandas as pd
 import rioxarray as rxr
 import xarray as xr
 
+# ``uv run --script`` uses an isolated env without the seiche package installed;
+# add the repo ``src`` to sys.path so we can reuse seiche.utils_da.reproj_clip
+# instead of vendoring a copy here.
+import sys
+from pathlib import Path
 
-def reproj_clip(
-    da: xr.DataArray,
-    epsg: int,
-    poly: gpd.GeoDataFrame,
-    *,
-    pad: bool = True,
-) -> xr.DataArray | None:
-    """
-    Clip and reproject a DataArray to a polygon's bounding box and EPSG code.
-
-    Vendored from seiche.utils_da so this script stays standalone; keep the
-    two copies in sync.
-
-    Parameters
-    ----------
-    da : xr.DataArray
-        Input DataArray to be clipped and reprojected.
-    epsg : int
-        EPSG code for target projection.
-    poly : gpd.GeoDataFrame
-        Polygon(s) for clipping and reprojection.
-    pad : bool
-        Whether or not to pad the clipped data to the full extent of ``poly``.
-
-    Returns
-    -------
-    xr.DataArray | None
-        Clipped and reprojected DataArray, or ``None`` if no data is in bounds.
-
-    """
-    clipper = poly.to_crs(epsg=da.rio.crs.to_epsg())
-    try:
-        newda = (
-            da.rio.clip_box(*clipper.total_bounds)
-            .rio.clip(clipper.geometry.values)
-            .rio.reproject(f"EPSG:{epsg}")
-        )
-    except rxr.exceptions.NoDataInBounds:
-        return None
-    if pad:
-        newda = newda.rio.pad_xy(*poly.total_bounds)
-    return newda
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
+from seiche.utils_da import reproj_clip
 
 
 def download_snow_cloud_cover(

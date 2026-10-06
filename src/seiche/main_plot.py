@@ -12,6 +12,7 @@ import hvplot.xarray
 import matplotlib.colors as mcolors
 import rioxarray as rxr
 import xarray as xr
+from holoviews.plotting.mpl.renderer import MPLRenderer
 
 from seiche.utils_enum import Landcover, OutputFiles, PopDataset
 from seiche.utils_plot import Colors, HvOpts
@@ -26,10 +27,14 @@ logger = logging.getLogger(__name__)
 
 def _plot_dem(state: dict[str, Any]) -> None:
     """
-    Desc.
+    Plot the DEM, skipping when none was generated (e.g. hvt-only runs).
     """
+    dem_savepath = OutputFiles.dem.savepath(state)
+    if not dem_savepath.exists():
+        logger.info("Skipping DEM plot: no DEM file found")
+        return
     dem = asinstance(
-        rxr.open_rasterio(OutputFiles.dem.savepath(state)),
+        rxr.open_rasterio(dem_savepath),
         xr.DataArray,
     )
     _save_hvplot(
@@ -258,6 +263,11 @@ def _save_hvplot(state: dict[str, Any], fig: object, filename: str) -> None:
         msg = f"filename must be a str, got {filename}"
         raise TypeError(msg)
     savepath = f"{state['config']['path.out']}/{filename}.png"
+    # holoviews caches tight bounding boxes keyed by the matplotlib figure id
+    # and never clears them: a new figure can reuse a dead figure's id and
+    # inherit its bbox, making the PNG margins non-deterministic. Clearing the
+    # cache before each save forces every figure to compute its own bbox.
+    MPLRenderer.drawn.clear()
     hvplot.save(fig, savepath, backend="matplotlib")
     logger.info("🎨 %s.png", filename)
 

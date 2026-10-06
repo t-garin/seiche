@@ -3,6 +3,7 @@ Tests for the .slf formatting utilities.
 """
 
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -68,6 +69,25 @@ def test_get_delineation(slf, case: dict) -> None:
     assert poly.is_valid and not poly.is_empty
     assert poly.geom_type == "Polygon"
     assert list(poly.bounds) == case["expected_bounds"]
+
+
+def test_get_delineation_masked_triangles() -> None:
+    """Masked triangles are excluded, yielding one part per connected piece."""
+    meshx = np.array([0.0, 1.0, 1.0, 0.0, 0.5])
+    meshy = np.array([0.0, 0.0, 1.0, 1.0, 0.5])
+    triangles = np.array([[0, 1, 4], [1, 2, 4], [2, 3, 4], [3, 0, 4]])
+    # keep only the two disjoint triangles on the anti-diagonal
+    tri = SimpleNamespace(
+        get_masked_triangles=lambda: np.ma.masked_array(
+            triangles,
+            mask=np.array([[False] * 3, [True] * 3, [False] * 3, [True] * 3]),
+        ),
+    )
+    # get_delineation only needs meshx/meshy/tri, which are read-only on Slf
+    poly = Slf.get_delineation(SimpleNamespace(meshx=meshx, meshy=meshy, tri=tri))
+    assert poly.geom_type == "MultiPolygon"
+    assert len(poly.geoms) == 2
+    assert sorted(round(g.area, 6) for g in poly.geoms) == [0.25, 0.25]
 
 
 @pytest.mark.parametrize("case", GRID_CASES)

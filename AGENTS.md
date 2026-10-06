@@ -17,6 +17,19 @@ repository, never directly in the master checkout:
 ## Tools
 - Use `uv` to run any python related commands.
 
+## Container
+- Always run seiche, its tests and its lint from inside the container, never
+  directly on the host.
+- Build the image with `just container-build`, then get a shell with
+  `just container-run`.
+- The image bundles the source, the dependencies, OpenTelemac and the data
+  directories, so no host data needs to be mounted. Use only data already in
+  the image: never mount host directories (e.g. with `-v`) when running the
+  container, so results are reproducible and the run uses only image data. Run
+  e.g. `podman run --rm seiche:latest -c "cd /seiche && just unittest"`.
+- If `podman` is not installed, ask the user whether to set up podman first or
+  run the commands directly on the host instead. Do not pick for them.
+
 ## Architecture
 
 ### Source files
@@ -27,6 +40,7 @@ repository, never directly in the master checkout:
 - Feel free to reorganize, create and/or delete source files as long as there are no subfolders in `src/seiche`.
 
 ## Code style
+- Before writing any new code, always check whether a well-maintained third-party library already provides the needed functionality (e.g. numpy, scipy, shapely, xarray, rioxarray, pandas, scikit-image). Prefer calling the third-party function over hand-rolling an equivalent one, and reuse what the project already depends on.
 - Follow PEP8.
 - Always use type annotations.
 - Always use docstrings. They should be numpy-style.

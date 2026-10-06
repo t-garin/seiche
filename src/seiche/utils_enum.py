@@ -17,7 +17,7 @@ LandcoverType.__doc__ = "Raster or vector land cover representation."
 DamageFunc = StrEnum("DamageFunc", "jrc, floodam")
 DamageFunc.__doc__ = "Damage functions applied to the hazards."
 
-HazardSource = StrEnum("HazardSource", "slf, bfm")
+HazardSource = StrEnum("HazardSource", "slf, bfm, hvt")
 HazardSource.__doc__ = "Hazard sources."
 
 PopDataset = StrEnum("PopDataset", "filosofi, ghslpop")

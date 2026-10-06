@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import logging
 import sys
+from collections.abc import Iterable
 from pathlib import Path
 from typing import override
 
@@ -155,6 +156,48 @@ def is_file_ok(filepath: str, expected_sha256: str) -> bool:
     Quick boolean test to check if filepath matches the supplied SHA-256 hash.
     """
     return compute_file_sha256(filepath) == expected_sha256
+
+
+def check_sha256_manifest(
+    precompiled_dir: str | Path,
+    filenames: Iterable[str],
+    *,
+    rerun_hint: str,
+) -> None:
+    """
+    Check the SHA-256 digest of each file against the sha256.txt manifest.
+
+    The manifest lives in ``precompiled_dir``, one ``"<digest>  <filename>"``
+    entry per line (blank lines are skipped).
+
+    Parameters
+    ----------
+    precompiled_dir : str | Path
+        Directory holding the files and the ``sha256.txt`` manifest.
+    filenames : Iterable[str]
+        Names of the files to check, relative to ``precompiled_dir``.
+    rerun_hint : str
+        Command suggested in the error message when a digest mismatches.
+
+    Raises
+    ------
+    RuntimeError
+        If a file digest does not match the manifest, with a message
+        containing ``sha256 mismatch`` and ``rerun_hint``.
+
+    """
+    manifest_path = Path(precompiled_dir) / "sha256.txt"
+    with manifest_path.open() as f:
+        manifest = {
+            filename: digest
+            for digest, filename in (line.split() for line in f if line.strip())
+        }
+
+    for filename in filenames:
+        digest = compute_file_sha256(Path(precompiled_dir) / filename)
+        if digest != manifest[filename]:
+            msg = f"{filename} sha256 mismatch, rerun {rerun_hint}"
+            raise RuntimeError(msg)
 
 
 def is_gpkg_ok(

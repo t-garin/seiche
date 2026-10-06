@@ -210,7 +210,8 @@ def read_hazards_from_state(state: dict[str, Any]) -> list[HazardSource]:
     Returns
     -------
     list[HazardSource]
-        The hazards, among ``HazardSource.slf`` and ``HazardSource.bfm``.
+        The hazards, among ``HazardSource.slf``, ``HazardSource.bfm`` and
+        ``HazardSource.hvt``.
 
     """
     config = state["config"]
@@ -219,6 +220,8 @@ def read_hazards_from_state(state: dict[str, Any]) -> list[HazardSource]:
         hazards.append(HazardSource.slf)
     if config["path.inp.bfm.root"] is not None:
         hazards.append(HazardSource.bfm)
+    if config["path.inp.hvt"] is not None:
+        hazards.append(HazardSource.hvt)
     return hazards
 
 

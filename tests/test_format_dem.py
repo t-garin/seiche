@@ -116,3 +116,17 @@ def test_generate_or_load_dem(tmp_path: Path, case: dict) -> None:
     out = generate_or_load_dem(state)
     dem = xr.open_dataarray(out["dem"]["path"])
     run_case(case, lambda: dem.values)
+
+
+def test_generate_or_load_dem_skips_hvt_only(tmp_path: Path) -> None:
+    """No DEM is generated when only user-provided hvt hazards are configured."""
+    state = synthetic_state(
+        tmp_path,
+        **{
+            "path.inp.hvt": [{"nickname": "hvt", "filepath": "hvt.tif"}],
+            "path.inp.slf": None,
+            "path.inp.bfm.root": None,
+        },
+    )
+    out = generate_or_load_dem(state)
+    assert "dem" not in out

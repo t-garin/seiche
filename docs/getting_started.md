@@ -39,7 +39,47 @@ In order to setup your `SSH` key, please refer to https://docs.gitlab.com/user/s
 
 ## Installation
 
-A convenient `./install_seiche.sh` script allows to install everything you need to run the code, mainly `uv` as package manager, `just` as a command runner and a local copy of the OpenTelemac python APIs, that will be sourced correctly. Simply run:
+There are two ways to get seiche up and running. The recommended one is to use
+the provided OCI container, which bundles the source, the dependencies, a local
+copy of the OpenTelemac python APIs and the test data. If you prefer not to use
+a container, you can install everything on your host with `./install_seiche.sh`.
+
+### (recommended) Using the container
+
+An OCI container image is provided that bundles the source, the dependencies, a
+local copy of the OpenTelemac python APIs and the test data. It is a convenient
+way to run seiche and its tests in a reproducible environment without installing
+anything on your host. It requires [podman](https://podman.io/) (with its
+machine started, e.g. `podman machine start`).
+
+Build the image (produces an OCI image tagged `seiche:latest`):
+
+```sh
+just container-build
+```
+
+Then get an interactive shell inside it:
+
+```sh
+just container-run
+```
+
+Or run a single command without entering the shell:
+
+```sh
+podman run --rm seiche:latest -c "cd /seiche && just test"
+```
+
+The image already contains all the data it needs, so use only the data bundled
+inside it: never mount host directories (e.g. with `-v`) when running the
+container. This keeps runs reproducible and makes sure only image data is used.
+
+### (alternative) Installing on your host
+
+A convenient `./install_seiche.sh` script allows to install everything you need
+to run the code, mainly `uv` as package manager, `just` as a command runner and
+a local copy of the OpenTelemac python APIs, that will be sourced correctly.
+Simply run:
 
 ```sh
 >>> ./install_seiche.sh
@@ -114,9 +154,8 @@ just test
 
 Among the tests, light, full-pipeline test cases are run, in the folders `tests/marmande_light` and `tests/stomer_light`, [see their description here](tests.md).
 
-⚠️ As of today, with the same code and same input data, the SHA256 signatures can be different based on the machine used for the computation. I am working on fixing this. ⚠️
 
-### (optional) Run headless/on HPC 
+## (optional) Run headless/on HPC 
 
 For some computations and on HPC, it is recommended to launch it using a job manager like SLURM. in the `slurms` directory, you can find an example of how to run SEICHE with SLURM. They all wrap the `just run` command, that allows to launch the computation, with additionnal cluster-specific infomations.
 

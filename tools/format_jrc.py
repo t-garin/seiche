@@ -150,54 +150,20 @@ def format_r_maxdmg(
     Initialize the maximum damage dataframe for infrastructur and roads.
     """
     # hardcoded regional max damages (€/m2)
-    eu_max = 25
-    us_max = 245
-    as_max = 4
-    oc_max = 7
-    gl_max = 70
+    regional_max = {"EU": 25, "AS": 4, "OC": 7}
 
     # hardcoded regional GDPs (2010 US$)
-    eu_gdp = 43097  # europe
-    us_gdp = 48377  # united states
-    as_gdp = 1913  # asia
-    oc_gdp = 51800  # oceania
-    gl_gdp = 36297  # global
+    regional_gdp = {"EU": 43097, "AS": 1913, "OC": 51800}  # europe, asia, oceania
 
-    df_maxdmg = _get_local_gdp(filepath, sheet_name)
-
-    for index, row in df_maxdmg.iterrows():
-        a3 = row["a3"]
-        local_gdp = row["local-gdp"]
-
-        # Get continent GDP
-        if a3 == "USA":
-            average_gdp = us_gdp
-            average_max = us_max
-        else:
-            match row["continent"]:
-                case "EU":
-                    average_gdp = eu_gdp
-                    average_max = eu_max
-                case "AS":
-                    average_gdp = as_gdp
-                    average_max = as_max
-                case "OC":
-                    average_gdp = oc_gdp
-                    average_max = oc_max
-                case _:
-                    # default case, use global
-                    # works whether or not a3 code is available
-                    average_gdp = gl_gdp
-                    average_max = gl_max
-
-        # if no local_gdp is provided, we use the gl_gdp
-        if np.isnan(local_gdp):
-            local_gdp = gl_gdp
-
-        # formula given in excel file
-        df_maxdmg.loc[index, "maxdmg"] = average_max * local_gdp / average_gdp
-
-    return df_maxdmg
+    return _apply_regional_maxdmg(
+        _get_local_gdp(filepath, sheet_name),
+        regional_max,
+        regional_gdp,
+        default_max=70,
+        default_gdp=36297,
+        usa_max=245,
+        usa_gdp=48377,
+    )
 
 
 def format_t_maxdmg(
@@ -207,43 +173,51 @@ def format_t_maxdmg(
     Initialize the maximum damage dataframe for transport.
     """
     # hardcoded regional max damages (€/m2)
-    eu_max = 751
-    sa_max = 215
-    as_max = 209
-    gl_max = 392
+    regional_max = {"EU": 751, "SA": 215, "AS": 209}
 
     # hardcoded regional GDPs (2010 US$)
-    eu_gdp = 43097  # europe
-    sa_gdp = 10978  # central and south america
-    as_gdp = 2834  # asia
-    gl_gdp = 18970  # global
+    regional_gdp = {"EU": 43097, "SA": 10978, "AS": 2834}
 
-    df_maxdmg = _get_local_gdp(filepath, sheet_name)
+    return _apply_regional_maxdmg(
+        _get_local_gdp(filepath, sheet_name),
+        regional_max,
+        regional_gdp,
+        default_max=392,
+        default_gdp=18970,
+    )
 
+
+def _apply_regional_maxdmg(
+    df_maxdmg: pd.DataFrame,
+    regional_max: dict[str, float],
+    regional_gdp: dict[str, float],
+    default_max: float,
+    default_gdp: float,
+    usa_max: float | None = None,
+    usa_gdp: float | None = None,
+) -> pd.DataFrame:
+    """
+    Compute the max damage per row from the regional max damage and GDP.
+
+    Continents not in the regional dicts fall back to the global values. If
+    usa_max/usa_gdp are given, the USA row uses them instead of its continent.
+    """
     for index, row in df_maxdmg.iterrows():
-        # a3 = row["a3"]
         local_gdp = row["local-gdp"]
 
         # Get continent GDP
-        match row["continent"]:
-            case "EU":
-                average_gdp = eu_gdp
-                average_max = eu_max
-            case "AS":
-                average_gdp = as_gdp
-                average_max = as_max
-            case "SA":
-                average_gdp = sa_gdp
-                average_max = sa_max
-            case _:
-                # default case, use global
-                # works whether or not a3 code is available
-                average_gdp = gl_gdp
-                average_max = gl_max
+        if usa_max is not None and usa_gdp is not None and row["a3"] == "USA":
+            average_gdp = usa_gdp
+            average_max = usa_max
+        else:
+            # default case, use global
+            # works whether or not a3 code is available
+            average_gdp = regional_gdp.get(row["continent"], default_gdp)
+            average_max = regional_max.get(row["continent"], default_max)
 
-        # if no local_gdp is provided, we use the gl_gdp
+        # if no local_gdp is provided, we use the default_gdp
         if np.isnan(local_gdp):
-            local_gdp = gl_gdp
+            local_gdp = default_gdp
 
         # formula given in excel file
         df_maxdmg.loc[index, "maxdmg"] = average_max * local_gdp / average_gdp

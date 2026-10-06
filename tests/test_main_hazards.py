@@ -15,15 +15,16 @@ from generate_synthetic_data import (
     load_test_data,
     run_case,
     synthetic_dem,
+    synthetic_hazard_at,
     synthetic_raster,
     synthetic_state,
 )
 
 from seiche.main_hazards import (
-    _generate_bfm_duration,
     generate_bfm_hazard,
     generate_hazard,
     generate_hazard_from_bands,
+    generate_hvt_hazard,
     generate_slf_hazard,
 )
 
@@ -37,8 +38,8 @@ FROM_BANDS_CASES = load_test_data(
 )
 SLF_HAZARD_CASES = load_test_data("test_main_hazards_data.yml", "generate_slf_hazard")
 BFM_HAZARD_CASES = load_test_data("test_main_hazards_data.yml", "generate_bfm_hazard")
-BFM_DURATION_CASES = load_test_data(
-    "test_main_hazards_data.yml", "generate_bfm_duration"
+HVT_HAZARD_CASES = load_test_data(
+    "test_main_hazards_data.yml", "generate_hvt_hazard"
 )
 
 
@@ -117,6 +118,23 @@ def _bfm_state(tmp_path: Path, **overrides: object) -> dict[str, object]:
     )
 
 
+def _hvt_state(tmp_path: Path, **overrides: object) -> dict[str, object]:
+    """Return a state configured to process one user-provided hvt raster."""
+    state = synthetic_state(
+        tmp_path,
+        **{
+            "path.inp.hvt": [{"nickname": "hvt", "filepath": "hvt.tif"}],
+            "path.inp.slf": None,
+            "path.inp.bfm.root": None,
+            "use.dmg.floodam": True,
+            "use.dmg.jrc": False,
+        },
+    )
+    (tmp_path / "out").mkdir(exist_ok=True)
+    state["config"].update(overrides)
+    return state
+
+
 def _bfm_dem() -> object:
     """A DEM covering the synthetic BFM location."""
     dem = synthetic_dem(shape=(10, 10), pixel_size=100)
@@ -129,15 +147,25 @@ def test_generate_hazard(tmp_path, monkeypatch, case: dict) -> None:
     if case["source"] == "slf":
         state = _slf_state(tmp_path)
         dem = _slf_dem()
-    else:
+    elif case["source"] == "bfm":
         state = _bfm_state(tmp_path)
         dem = _bfm_dem()
+    else:
+        state = _hvt_state(tmp_path)
+        dem = None
+        synthetic_raster(
+            tmp_path / "hvt.tif",
+            np.stack([np.full((10, 10), 1.0), np.full((10, 10), 2.0), np.full((10, 10), 3.0)]),
+            n=10,
+            n_bands=3,
+        )
     if case["source"] == "unknown":
         monkeypatch.setattr(
             "seiche.main_hazards.read_hazards_from_state", lambda state: ["bogus"]
         )
-    dem.rio.to_raster(tmp_path / "dem.tif")
-    state["dem"] = {"path": tmp_path / "dem.tif"}
+    if dem is not None:
+        dem.rio.to_raster(tmp_path / "dem.tif")
+        state["dem"] = {"path": tmp_path / "dem.tif"}
     if "raises" in case:
         run_case(case, lambda: generate_hazard(state))
         return
@@ -201,6 +229,44 @@ def test_generate_slf_hazard(tmp_path, monkeypatch, case: dict) -> None:
 
 
 @pytest.mark.parametrize(
+    "case", HVT_HAZARD_CASES, ids=[c["name"] for c in HVT_HAZARD_CASES]
+)
+def test_generate_hvt_hazard(tmp_path, case: dict) -> None:
+    """User-provided hvt rasters become 3-band hazards, clipped to the poly."""
+    n_bands = case.get("n_bands", 3)
+    values = np.stack(
+        [np.full((10, 10), value) for value in (1.0, 2.0, 3.0)[:n_bands]]
+    )
+    synthetic_raster(tmp_path / "hvt.tif", values, n=10, n_bands=n_bands)
+    state = _hvt_state(
+        tmp_path,
+        **{
+            "use.dmg.floodam": case.get("use", {}).get("floodam", True),
+            "use.dmg.jrc": case.get("use", {}).get("jrc", False),
+        },
+    )
+    if "raises" in case:
+        run_case(case, lambda: generate_hvt_hazard(state))
+        return
+    if case.get("loads_existing"):
+        pre = synthetic_hazard_at(500000, 6300000, shape=(10, 10), pixel_size=100)
+        pre.rio.to_raster(tmp_path / "out" / "hzd_hvt_test.tif")
+    hazard = generate_hvt_hazard(state)
+    assert set(hazard) == set(case["expected_keys"])
+    for hzd in hazard.values():
+        assert hzd.shape[0] == 3
+    if case.get("loads_existing"):
+        np.testing.assert_array_equal(hazard["hvt"].values, pre.values)
+    if case.get("check_bands"):
+        # the user values survive (e.g. V/T are not zeroed when only JRC is used)
+        for band, expected in ((0, 1.0), (1, 2.0), (2, 3.0)):
+            values_ = hazard["hvt"].isel(band=band).values
+            # 255 is the raster nodata value written by synthetic_raster
+            mask = np.isfinite(values_) & (values_ != 255)
+            assert np.allclose(values_[mask], expected)
+
+
+@pytest.mark.parametrize(
     "case", BFM_HAZARD_CASES, ids=[c["name"] for c in BFM_HAZARD_CASES]
 )
 def test_generate_bfm_hazard(tmp_path, case: dict) -> None:
@@ -216,19 +282,4 @@ def test_generate_bfm_hazard(tmp_path, case: dict) -> None:
         assert duration_path.stat().st_mtime == mtime
 
 
-@pytest.mark.parametrize("case", BFM_DURATION_CASES)
-def test_generate_bfm_duration(tmp_path, case: dict) -> None:
-    """_generate_bfm_duration writes a duration raster."""
-    state = _bfm_state(tmp_path)
-    from seiche.format_bfm import generate_bfms_netcdfs
 
-    savedir = Path(generate_bfms_netcdfs(state))
-    savepath = tmp_path / "out" / "duration_test.tif"
-    _generate_bfm_duration(
-        paths=list(savedir.glob("*.nc")),
-        savepath=savepath,
-        mindate=np.datetime64(case["mindate"], "ns"),
-        maxdate=np.datetime64(case["maxdate"], "ns"),
-        target_resolution=100,
-    )
-    assert savepath.exists()

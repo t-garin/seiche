@@ -14,7 +14,7 @@ import xarray as xr
 from seiche.utils_da import read_netcdf
 from seiche.utils_enum import FloodamAlea, FloodamSeason, HazardBand
 from seiche.utils_gdf import concat_hazard, find_column, streamline
-from seiche.utils_qol import asinstance, compute_file_sha256, require
+from seiche.utils_qol import asinstance, check_sha256_manifest, require
 
 logger = logging.getLogger(__name__)
 
@@ -71,23 +71,11 @@ def _read_precompiled(
         "wint.nc": "wint",
     }
 
-    manifest_path = Path(precompiled_dir) / "sha256.txt"
-    with Path(manifest_path).open() as f:
-        manifest = {
-            filename: digest
-            for digest, filename in (line.split() for line in f if line.strip())
-        }
-
-    for filename in precompiled_files:
-        digest = compute_file_sha256(Path(precompiled_dir) / filename)
-        if digest != manifest[filename]:
-            msg = (
-                f"{filename} sha256 mismatch, "
-                "rerun `uv run --script tools/format_floodam.py`"
-            )
-            raise RuntimeError(
-                msg,
-            )
+    check_sha256_manifest(
+        precompiled_dir,
+        precompiled_files,
+        rerun_hint="`uv run --script tools/format_floodam.py`",
+    )
 
     dirpath = Path(precompiled_dir)
     return {

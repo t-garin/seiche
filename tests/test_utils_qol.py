@@ -14,6 +14,7 @@ from generate_synthetic_data import load_test_data, run_case
 
 from seiche.utils_qol import (
     asinstance,
+    check_sha256_manifest,
     compute_file_sha256,
     compute_gpkg_sha256,
     is_file_ok,
@@ -107,6 +108,27 @@ def test_is_gpkg_ok(tmp_path: Path, case: dict) -> None:
     assert (
         is_gpkg_ok(str(_write_gpkg(tmp_path, case)), case["hash"]) == case["expected"]
     )
+
+
+def test_check_sha256_manifest_ok(tmp_path: Path) -> None:
+    """check_sha256_manifest passes when every file matches the manifest."""
+    (tmp_path / "a.txt").write_text("hello", encoding="utf-8")
+    digest = compute_file_sha256(tmp_path / "a.txt")
+    # blank lines in the manifest are skipped
+    (tmp_path / "sha256.txt").write_text(
+        f"\n{digest}  a.txt\n\n", encoding="utf-8"
+    )
+    check_sha256_manifest(tmp_path, ["a.txt"], rerun_hint="make data")
+
+
+def test_check_sha256_manifest_raises_on_mismatch(tmp_path: Path) -> None:
+    """check_sha256_manifest raises on a digest mismatch with the rerun hint."""
+    (tmp_path / "a.txt").write_text("hello", encoding="utf-8")
+    (tmp_path / "sha256.txt").write_text(
+        f"{'0' * 64}  a.txt\n", encoding="utf-8"
+    )
+    with pytest.raises(RuntimeError, match="sha256 mismatch"):
+        check_sha256_manifest(tmp_path, ["a.txt"], rerun_hint="make data")
 
 
 def test_setup_logging() -> None:

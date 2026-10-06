@@ -177,6 +177,9 @@ def synthetic_state(
         "path.out": str(tmp_path / "out"),
         "param.EPSG": 2154,
         "param.expname": "test",
+        "path.inp.slf": None,
+        "path.inp.bfm.root": None,
+        "path.inp.hvt": None,
     }
     config.update(config_overrides)
     poly = gpd.GeoDataFrame(

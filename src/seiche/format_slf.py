@@ -5,9 +5,11 @@ Extracts data from .slf files and format them in xr.DataArray.
 import os
 import sys
 from contextlib import suppress
+from typing import cast
 
 import numpy as np
 import shapely
+import shapely.ops
 import xarray as xr
 from matplotlib.tri import LinearTriInterpolator
 from numpy import ma
@@ -89,64 +91,25 @@ class Slf(TelemacFile):
         Returns
         -------
         shapely.Polygon
-            Polygon representing the mesh extent.
+            Polygon representing the mesh extent. Can be a shapely.MultiPolygon
+            for complex or masked meshes (e.g. several disconnected parts).
 
         Notes
         -----
         My refactoring of Thanh Huy Nguyen's function 'delineation_T2D_bounds'
-        (tools4telemac gitlab)
-        Only works if the mesh edges form a single LinearRing. See
-        dev.dev_format_slf.SlfMisc.polygonize_by_threshold for complex cases.
+        (tools4telemac gitlab).
 
         """
         # take mask into account, changes nothing if no mask
-        triangles = self.tri.get_masked_triangles()
-        # finding edges lying on the exteriour of the mesh
-        # based on their value in tri.neighbors
-        boundary_edges = [
-            (triangles[i, j], triangles[i, (j + 1) % 3])
-            for i in range(len(triangles))
-            for j in range(3)
-            if self.tri.neighbors[i, j] < 0
-            # triangle edge (i,j) has no neighbor so it is a boundary edge
+        triangles = np.ma.asarray(self.tri.get_masked_triangles())
+        triangles = triangles[~np.ma.getmaskarray(triangles).any(axis=1)]
+        # one polygon per triangle, unioned to get the mesh extent
+        polygons = [
+            shapely.geometry.Polygon(np.c_[self.meshx[t], self.meshy[t]])
+            for t in triangles
         ]
-        # THE FOLLOWING ONLY WORKS IF THE EDGES FOR A SINGLE LINEARRING
-        # ~
-        # constructing the polygon path :
-        #   - start from the node in position [0, 0] of the boundary edges
-        #     matrix (could be random)
-        #   - then loop over the tuples in the matrix to find the node associated
-        #     with the previous one
-        #   - rinse and repeat until the index is complete
-        # example :
-        #   [[234, 54]      -> 1. on the first loop appends 234, then keeps
-        #                       54 in memory
-        #    [46, 789]      -> 3. appends 46, keeps 789
-        #    [54,  46]      -> 2. then on the second loop appends 54, then
-        #                       keeps 46
-        #    [789, 234]]    -> 4. appends 789, keeps 234 in memory (useless
-        #                       but makes the code more concise)
-        #                       while loop breaks since
-        #                       all boundary edges have been visited
-        #
-        # >>> boundardy_idx = [234, 54, 46, 789]
-        boundary_idx = []
-        j = boundary_edges[0][0]
-        while len(boundary_idx) < len(boundary_edges):
-            for u, v in boundary_edges:
-                if u == j:
-                    boundary_idx.append(j)
-                    j = v
-                    break
-        # based on previously computed path, we can generate the shapely Polygon
-        return shapely.geometry.Polygon(
-            np.hstack(
-                [
-                    np.array([self.meshx[boundary_idx]]).T,
-                    np.array([self.meshy[boundary_idx]]).T,
-                ],
-            ),
-        )
+        # shapely ships no type hints: the union may also be a MultiPolygon
+        return cast("shapely.Polygon", shapely.ops.unary_union(polygons))
 
     def interp_values_on_grid(
         self,

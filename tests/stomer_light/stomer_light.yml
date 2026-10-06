@@ -22,6 +22,7 @@ path.inp.bfm.root: floodml
 path.inp.dem.EPSG: null
 path.inp.dem.filter_key: demCop30.tif
 path.inp.dem.root: .
+path.inp.hvt: null
 path.inp.lcv.bdtopo:
     - bdtopo_2023.gpkg
 path.inp.lcv.esawc:

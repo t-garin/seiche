@@ -423,6 +423,60 @@ def doc_3_b_slf(mo, n_slf_files, param_slf_pixel_size, slf_files):
 
 @app.cell(hide_code=True)
 def _(mo):
+    MAX_HVT_FILES = 20
+    n_hvt_files = mo.ui.slider(0, MAX_HVT_FILES, label="Number of user-provided hvt rasters:")
+    hvt_files = [
+        [
+            mo.ui.text(label = f"`nickname`"),
+            mo.ui.text(label = f"`filepath`"),
+        ]
+        for i in range(MAX_HVT_FILES)
+    ]
+    return n_hvt_files, hvt_files
+
+
+@app.cell(hide_code=True)
+def doc_3_c_hvt(mo, n_hvt_files, hvt_files):
+    hvt_contents = []
+    if mo.app_meta().mode not in ["run", "edit"]:
+        hvt_contents.append(mo.md("## 3-C. User-provided H/V/T hazard rasters (optional)"))
+
+    hvt_contents.append(mo.md(r"""
+    >###**`path.inp.hvt`**
+    `*(optional, list[dict])* List of dictionaries pointing to ready-made 3-band hazard rasters. The bands must be, in order: H (max water depth), V (max water velocity) and T (flood duration). SEICHE skips the slf/bfm hazard generation and only reprojects/clips these rasters to the study area. E.g.:`
+    ```yaml
+    path.inp.hvt:
+      - nickname:        my_hazard
+          filepath:        my_hazard_hvt.tif
+    ```
+
+    >####**`nickname`**
+    `*(mandatory, str)* Identifier string used when saving output files.`
+
+    >####**`filepath`**
+    `*(mandatory, str)* Path pointing to the 3-band raster (H, V, T).`
+    """))
+
+    if mo.app_meta().mode in ["run", "edit"]:
+        hvt_contents.append(n_hvt_files)
+        hvt_contents.append(
+            mo.ui.tabs({
+                f"{i+1}":mo.vstack(hvt_file)
+                for (i, hvt_file) in enumerate(hvt_files)
+                if i < n_hvt_files.value
+            })
+        )
+
+    if mo.app_meta().mode in ["run", "edit"]:
+        _output = mo.accordion({"3-C. User-provided H/V/T hazard rasters (optional)":mo.vstack(hvt_contents)})
+    else:
+        _output = mo.vstack(hvt_contents)
+    _output
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
     n_files_esawc = mo.ui.slider(0, 20, label = "Number of landcover files for ESAWC:")
     n_files_oso23 = mo.ui.slider(0, 20, label = "Number of landcover files for OSO23:")
     n_files_bdtopo = mo.ui.slider(0, 20, label = "Number of landcover files for BDTOPO:")
@@ -712,6 +766,8 @@ def _(
     rpg_files,
     sirene_files,
     slf_files,
+    hvt_files,
+    n_hvt_files,
     use_defended_fwdet_c,
     use_defended_fwdet_l,
     use_defended_fwdet_n,
@@ -778,6 +834,16 @@ def _(
         }
         for i, slf_file in enumerate(slf_files)
         if i < n_slf_files.value
+    ] or None
+
+    # 3-C. HVT
+    config["path.inp.hvt"] = [
+        {
+            "nickname": hvt_file[0].value,
+            "filepath": hvt_file[1].value,
+        }
+        for i, hvt_file in enumerate(hvt_files)
+        if i < n_hvt_files.value
     ] or None
 
     # 4. Landcover

@@ -27,7 +27,6 @@ from seiche.format_bfm import (
     get_duration,
     get_duration_from_bfms,
     get_max_depth_from_duration,
-    get_max_speed_from_dem,
     is_bfm_valid,
     load_bfms_from_nc_files,
 )
@@ -43,7 +42,6 @@ NETCDFS_CASES = load_test_data("test_format_bfm_data.yml", "generate_bfms_netcdf
 MAX_DEPTH_CASES = load_test_data(
     "test_format_bfm_data.yml", "get_max_depth_from_duration"
 )
-MAX_SPEED_CASES = load_test_data("test_format_bfm_data.yml", "get_max_speed_from_dem")
 DUR_FROM_BFMS_CASES = load_test_data(
     "test_format_bfm_data.yml", "get_duration_from_bfms"
 )
@@ -167,15 +165,6 @@ def test_get_max_depth_from_duration(tmp_path, case: dict) -> None:
     )
     assert max_depth.shape == duration.shape
     assert np.nanmin(max_depth.values) >= case["expected_min_ge"]
-
-
-@pytest.mark.parametrize("case", MAX_SPEED_CASES)
-def test_get_max_speed_from_dem(case: dict) -> None:
-    """max speed is an empty (all-NaN) copy of the DEM."""
-    dem = synthetic_dem(shape=case["shape"])
-    max_speed = get_max_speed_from_dem(dem)
-    assert max_speed.shape == dem.shape
-    assert np.isnan(max_speed.values).all()
 
 
 @pytest.mark.parametrize("case", DUR_FROM_BFMS_CASES)

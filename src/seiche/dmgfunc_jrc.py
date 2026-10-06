@@ -9,13 +9,13 @@ from pathlib import Path
 import geopandas as gpd
 import numpy as np
 import pandas as pd
+import shapely
 import xarray as xr
 
 from seiche.utils_da import da_from_array
 from seiche.utils_enum import HazardBand, HciMode, JrcClass, JrcRegion
 from seiche.utils_gdf import concat_hazard, streamline
-from seiche.utils_geom import bbox_intersection
-from seiche.utils_qol import asinstance, compute_file_sha256
+from seiche.utils_qol import asinstance, check_sha256_manifest
 
 logger = logging.getLogger(__name__)
 
@@ -53,21 +53,11 @@ def _read_precompiled(
         "amaxdmg.csv": "_amaxdmg",
     }
 
-    manifest_path = Path(precompiled_dir) / "sha256.txt"
-    with Path(manifest_path).open() as f:
-        manifest = {
-            filename: digest
-            for digest, filename in (line.split() for line in f if line.strip())
-        }
-
-    for filename in precompiled_files:
-        digest = compute_file_sha256(Path(precompiled_dir) / filename)
-        if digest != manifest[filename]:
-            msg = (
-                f"{filename} sha256 mismatch, "
-                "rerun `uv run --script tools/format_jrc.py`"
-            )
-            raise RuntimeError(msg)
+    check_sha256_manifest(
+        precompiled_dir,
+        precompiled_files,
+        rerun_hint="`uv run --script tools/format_jrc.py`",
+    )
 
     return {
         attr: pd.read_csv(Path(precompiled_dir) / filename, index_col=0)
@@ -144,7 +134,13 @@ class JRC:
         # do this elsewhere and call a function
         landcover = asinstance(landcover.copy(), gpd.GeoDataFrame)
         landcover.to_crs(epsg=hazard.rio.crs.to_epsg(), inplace=True)
-        bbox = bbox_intersection(landcover.total_bounds, hazard.rio.bounds())
+        bbox_poly = shapely.box(*landcover.total_bounds).intersection(
+            shapely.box(*hazard.rio.bounds())
+        )
+        if bbox_poly.is_empty:
+            msg = "landcover and hazard bounding boxes do not intersect"
+            raise ValueError(msg)
+        bbox = bbox_poly.bounds
         landcover = asinstance(landcover.clip(bbox), gpd.GeoDataFrame)
         hazard = asinstance(hazard.rio.clip_box(*bbox), xr.DataArray)
         # only keep the columns we need: index, geometry, class
@@ -218,8 +214,8 @@ class JRC:
                 class_vector=class_vector,
                 region=region,
             )
-            dmgs[mask] = np.vectorize(get_dmg, otypes=[np.float16])(hmax[mask])
-            stds[mask] = np.vectorize(get_std, otypes=[np.float16])(hmax[mask])
+            dmgs[mask] = get_dmg(hmax[mask])
+            stds[mask] = get_std(hmax[mask])
         # ---
         dmgs = da_from_array(dmgs, other_da=landcover)
         stds = da_from_array(stds, other_da=landcover)
@@ -376,13 +372,20 @@ class JRC:
         # UPDATE: i think not .. TODO: change this
         # if class_vector[i]!=0 else 0 : not interpolate if going to be
         # set to 0 afterwards
+        # the linear combination must stay array-safe: sum() broadcasts over
+        # scalar and array depths alike (np.array([...]).dot() is ragged
+        # and fails when the interpolators return arrays)
         return [
-            lambda depth: np.array(
-                [dmg_interp[i](depth) if class_vector[i] != 0 else 0 for i in range(6)],
-            ).dot(class_vector),
-            lambda depth: np.array(
-                [std_interp[i](depth) if class_vector[i] != 0 else 0 for i in range(6)],
-            ).dot(class_vector),
+            lambda depth: sum(
+                dmg_interp[i](depth) * class_vector[i]
+                for i in range(6)
+                if class_vector[i] != 0
+            ),
+            lambda depth: sum(
+                std_interp[i](depth) * class_vector[i]
+                for i in range(6)
+                if class_vector[i] != 0
+            ),
         ]
 
     def _get_maxdmg_classe(  # noqa: C901, PLR0911, PLR0912

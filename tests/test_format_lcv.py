@@ -18,10 +18,10 @@ from generate_synthetic_data import (
 
 from seiche.utils_enum import Landcover, LandcoverType
 from seiche.format_lcv import (
-    _load_sirene,
     _load_vector_lcv,
     generate_or_load_lcv,
 )
+from seiche.utils_gdf import read_sirene
 from seiche.utils_state import read_epsg_from_state, read_poly_from_state
 
 VECTOR_LCV_CASES = load_test_data("test_format_lcv_data.yml", "load_vector_lcv")
@@ -133,16 +133,22 @@ def test_load_sirene(tmp_path: Path, case: dict) -> None:
     if "raises" in case:
         run_case(
             case,
-            lambda: _load_sirene(
+            lambda: _load_vector_lcv(
                 paths,
                 savepath,
                 read_epsg_from_state(state),
                 read_poly_from_state(state),
+                reader=lambda p: read_sirene(p, epsg=read_epsg_from_state(state)),
             ),
         )
         return
-    lcv = _load_sirene(
-        paths, savepath, read_epsg_from_state(state), read_poly_from_state(state)
+    epsg = read_epsg_from_state(state)
+    lcv = _load_vector_lcv(
+        paths,
+        savepath,
+        epsg,
+        read_poly_from_state(state),
+        reader=lambda p: read_sirene(p, epsg=epsg),
     )
     assert len(lcv) == case["expected_len"]
     assert lcv.crs.to_epsg() == case["expected_crs"]

@@ -10,21 +10,18 @@ lint:
 
 # run the test suite
 test:
-    uv sync --group test
-    uv run pytest --cov=src/seiche --cov-report=term-missing tests/
+    uv run --group test pytest --cov=src/seiche --cov-report=term-missing tests/
 
 # run all tests except the full pipeline
 unittest:
-    uv sync --group test
-    uv run pytest --cov=src/seiche --cov-report=term-missing tests/ --ignore=tests/test_full_pipeline.py
+    uv run --group test pytest --cov=src/seiche --cov-report=term-missing tests/ --ignore=tests/test_full_pipeline.py
 
 # build and open the documentation
 docs:
     fuser -k 1312/tcp || true
-    uv sync --group docs
-    uv run pyan3 -m src/seiche/ --module-level --svg > docs/files_call_graph.svg
-    uv run tools/_seiche_config_builder_to_mkdocs.py
-    uv run mkdocs serve -o -a localhost:1312
+    uv run --group docs pyan3 -m src/seiche/ --module-level --svg > docs/files_call_graph.svg
+    uv run --group docs tools/_seiche_config_builder_to_mkdocs.py
+    uv run --group docs mkdocs serve -o -a localhost:1312
 
 # open the configuration builder
 config:
@@ -81,3 +78,11 @@ download-oso:
 [private]
 edit-config:
     @uvx marimo edit --sandbox tools/seiche_config_builder.py
+
+# build the podman OCI image
+container-build:
+    podman build --format oci -t seiche:latest .
+
+# run the container as an interactive shell
+container-run:
+    podman run --rm -it seiche:latest

@@ -48,6 +48,10 @@ path.inp.slf:
       depthThreshold: null
       freesurfVarname: null
 
+path.inp.hvt:
+    - nickname: null
+      filepath: null
+
 path.out: null
 use.defended.fwdet_c: null
 use.defended.fwdet_l: null
