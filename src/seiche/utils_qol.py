@@ -88,6 +88,17 @@ def parse_args() -> argparse.Namespace:
             "If ommited, will display at level logging.INFO."
         ),
     )
+    parser.add_argument(
+        "-o",
+        "--override",
+        action="append",
+        default=[],
+        metavar="KEY: VALUE",
+        help=(
+            'Override a config value, e.g. --override="path.out: /tmp/out". '
+            "Repeatable, values are parsed as YAML, unknown keys are rejected."
+        ),
+    )
 
     args = parser.parse_args()
 

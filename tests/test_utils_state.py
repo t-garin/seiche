@@ -29,6 +29,9 @@ EPSG_CASES = load_test_data("test_utils_state_data.yml", "epsg")
 USE_VARIABLES_CASES = load_test_data("test_utils_state_data.yml", "use_variables")
 POP_CONDITIONS_CASES = load_test_data("test_utils_state_data.yml", "pop_conditions")
 GET_CONFIG_CASES = load_test_data("test_utils_state_data.yml", "get_config")
+GET_CONFIG_OVERRIDE_CASES = load_test_data(
+    "test_utils_state_data.yml", "get_config_override"
+)
 HAZARDS_CASES = load_test_data("test_utils_state_data.yml", "hazards")
 
 
@@ -103,6 +106,19 @@ def test_get_config(tmp_path: Path, case: dict) -> None:
     loaded = get_config(config_path)
     assert loaded["path.out"] == case["expected"]["path.out"]
     assert loaded["param.EPSG"] == case["expected"]["param.EPSG"]
+
+
+@pytest.mark.parametrize("case", GET_CONFIG_OVERRIDE_CASES)
+def test_get_config_overrides(tmp_path: Path, case: dict) -> None:
+    """--override entries replace config values before validation."""
+    config_path = tmp_path / "config.yml"
+    config_path.write_text(yaml.safe_dump({**TEMPLATE}), encoding="utf-8")
+    if "raises" in case:
+        run_case(case, lambda: get_config(config_path, overrides=case["overrides"]))
+        return
+    loaded = get_config(config_path, overrides=case["overrides"])
+    for key, value in case["expected"].items():
+        assert loaded[key] == value
 
 
 @pytest.mark.parametrize("case", HAZARDS_CASES, ids=[c["name"] for c in HAZARDS_CASES])

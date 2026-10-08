@@ -70,6 +70,7 @@ def test_parse_args(monkeypatch, case: dict) -> None:
     args = parse_args()
     assert args.configfile == case["configfile"]
     assert args.verbose == case["verbose"]
+    assert args.override == case.get("override", [])
 
 
 @pytest.mark.parametrize("case", SHA256_CASES)

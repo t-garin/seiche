@@ -40,6 +40,33 @@ get_config:
   - template: false
     raises: ValueError
     match: not well formatted
+get_config_override:
+  - overrides: ["path.inp: /data/inp"]
+    expected: {path.inp: "/data/inp"}
+  - overrides: ["param.EPSG: 2154"]
+    expected: {param.EPSG: 2154}
+  - overrides: ["param.cold_run: true"]
+    expected: {param.cold_run: true}
+  - overrides:
+      - 'path.inp.slf: [{nickname: lf, filepath: x.slf, epsg: 2154, xspeedVarname: U, yspeedVarname: V, depthVarname: H, depthThreshold: 0, freesurfVarname: null}]'
+    expected:
+      path.inp.slf:
+        - nickname: lf
+          filepath: x.slf
+          epsg: 2154
+          xspeedVarname: U
+          yspeedVarname: V
+          depthVarname: H
+          depthThreshold: 0
+          freesurfVarname: null
+  - overrides: ["path.out: /a", "path.out: /b"]
+    expected: {path.out: /b}
+  - overrides: ["path.inpp: /data/inp"]
+    raises: ValueError
+    match: unknown config key
+  - overrides: ["path.inp"]
+    raises: ValueError
+    match: "key: value"
 hazards:
   - name: none
     overrides: {path.inp.slf: null, path.inp.bfm.root: null, path.inp.hvt: null}

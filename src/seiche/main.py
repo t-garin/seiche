@@ -11,7 +11,7 @@ be resumed from the last completed part.
 """
 
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any
 
@@ -54,7 +54,12 @@ def run_pipeline(state: dict[str, Any]) -> dict[str, Any]:
     return state
 
 
-def main(config_path: str | Path, *, verbose: bool = False) -> None:
+def main(
+    config_path: str | Path,
+    *,
+    verbose: bool = False,
+    overrides: Iterable[str] | None = None,
+) -> None:
     """
     Run the SEICHE pipeline.
 
@@ -66,10 +71,14 @@ def main(config_path: str | Path, *, verbose: bool = False) -> None:
     verbose : bool
         If true, logging is displayed at level DEBUG, otherwise INFO.
 
+    overrides : Iterable[str] | None, default: None
+        ``"key: value"`` items overriding config values, see
+        :func:`seiche.utils_state.get_config`.
+
     """
     setup_logging(level=logging.DEBUG if verbose else logging.INFO)
     logger.info("New run of seiche")
-    state = initialize_state(config_path)
+    state = initialize_state(config_path, overrides=overrides)
     run_pipeline(state)
     logger.info("SEICHE is done, bye bye")
 
@@ -79,7 +88,11 @@ def cli() -> None:
     Entrypoint for the command-line interface.
     """
     args = parse_args()
-    main(Path(args.configfile), verbose=args.verbose)
+    main(
+        Path(args.configfile),
+        verbose=args.verbose,
+        overrides=args.override,
+    )
 
 
 if __name__ == "__main__":  # pragma: no cover

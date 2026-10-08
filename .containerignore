@@ -1,0 +1,12 @@
+.git/
+.venv/
+.ruff_cache/
+node_modules/
+__marimo__/
+logs/
+site/
+*.pyc
+.coverage
+scalene-profile.json
+scalene-profile.html
+tmp/

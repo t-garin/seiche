@@ -26,6 +26,10 @@ initialize_state:
 main:
   - verbose: false
   - verbose: true
+  - verbose: false
+    override: ["path.inp: /data/inp"]
 cli:
   - verbose: false
   - verbose: true
+  - verbose: false
+    override: ["path.out: /data/out"]

@@ -144,6 +144,23 @@ just run seiche_config.yml
 
 `uv` should detect the `pyproject.toml` file -- _if the current working directory is the root directory of the repo_ -- and the dependencies should be installed, given that you have an internet connection.
 
+### Overriding config values
+
+Individual config values can be overridden without editing the config file, by
+repeating the `--override` (or `-o`) flag with `key: value` pairs. Values are
+parsed as YAML, so `param.EPSG: 2154` stays an integer and
+`param.cold_run: false` a boolean:
+
+```sh
+just run seiche_config.yml \
+    --override="path.inp: /data/inp" \
+    -o "path.out: /tmp/out" \
+    -o "param.cold_run: false"
+```
+
+Keys must be existing config keys, and the last occurrence wins when a key is
+repeated.
+
 ### (optional) Run `pytest` to check code integrity
 
 The code should be fully tested after each commit thanks to GitLab's CI/CD pipelines. However, it can be a good practice to test the code before using it, to ensure no bugs slipped in somehow. For this purpose, you can run the following command:

@@ -22,6 +22,14 @@ parse_args:
   - argv: [seiche, config.yml]
     configfile: config.yml
     verbose: false
+  - argv: [seiche, config.yml, --override, "path.inp: /data/inp"]
+    configfile: config.yml
+    verbose: false
+    override: ["path.inp: /data/inp"]
+  - argv: [seiche, config.yml, "--override=path.out: /data/out", -o, "param.cold_run: false"]
+    configfile: config.yml
+    verbose: false
+    override: ["path.out: /data/out", "param.cold_run: false"]
   - argv: [seiche]
     raises: SystemExit
 file_sha256:

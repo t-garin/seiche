@@ -10,6 +10,7 @@ import inspect
 import json
 import logging
 import shutil
+from collections.abc import Iterable
 from enum import StrEnum
 from importlib import resources
 from pathlib import Path
@@ -30,12 +31,47 @@ from seiche.utils_qol import asinstance, require
 logger = logging.getLogger(__name__)
 
 
-def get_config(config_path: Path | str) -> dict[str, Any]:
+def _parse_override(item: str) -> tuple[str, Any]:
+    """
+    Split a ``"key: value"`` override item into key and YAML-parsed value.
+    """
+    key, sep, value = item.partition(":")
+    if not sep:
+        msg = f'--override expects "key: value", got "{item}"'
+        raise ValueError(msg)
+    return key.strip(), yaml.safe_load(value)
+
+
+def get_config(
+    config_path: Path | str, overrides: Iterable[str] | None = None
+) -> dict[str, Any]:
     """
     Parse and return the config dict from a YAML file.
+
+    Parameters
+    ----------
+    config_path : Path | str
+        Path to the config YAML file.
+    overrides : Iterable[str] | None, default: None
+        ``"key: value"`` items replacing the matching config values after
+        loading, before validation. Values are parsed as YAML, so
+        ``"param.EPSG: 2154"`` becomes the int ``2154``.
+
+    Raises
+    ------
+    ValueError
+        If an item is not of the form ``key: value``, or if the key is not a
+        config key.
+
     """
     with Path(config_path).open() as configfile:
         config = yaml.safe_load(configfile)
+    for item in overrides or []:
+        key, value = _parse_override(item)
+        if key not in config:
+            msg = f'--override: unknown config key "{key}"'
+            raise ValueError(msg)
+        config[key] = value
     check_config(config)
     return config
 
@@ -363,7 +399,9 @@ def load_done(config: dict[str, Any]) -> dict[str, Any]:
     return progress.get("done", {})
 
 
-def initialize_state(config_path: str | Path) -> dict[str, Any]:
+def initialize_state(
+    config_path: str | Path, overrides: Iterable[str] | None = None
+) -> dict[str, Any]:
     """
     Build the initial SEICHE state from a config file.
 
@@ -374,6 +412,8 @@ def initialize_state(config_path: str | Path) -> dict[str, Any]:
     ----------
     config_path : str
         Path pointing to the .yml config file.
+    overrides : Iterable[str] | None, default: None
+        ``"key: value"`` items overriding config values, see :func:`get_config`.
 
     Returns
     -------
@@ -383,7 +423,7 @@ def initialize_state(config_path: str | Path) -> dict[str, Any]:
     """
     logger.info("📜 %s", config_path)
     state = {
-        "config": get_config(config_path),
+        "config": get_config(config_path, overrides=overrides),
         "config_path": str(config_path),
         "done": {},
     }

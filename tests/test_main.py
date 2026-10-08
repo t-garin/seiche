@@ -93,7 +93,7 @@ def test_initialize_state(tmp_path: Path, monkeypatch, case: dict) -> None:
     if case.get("write_old_file"):
         (tmp_path / "old_file.tif").write_text("x", encoding="utf-8")
     config = {**case["config"], "path.out": str(tmp_path)}
-    monkeypatch.setattr(us, "get_config", lambda path: config)
+    monkeypatch.setattr(us, "get_config", lambda path, overrides=None: config)
     if "load_done" in case:
         monkeypatch.setattr(
             "seiche.utils_state.load_done", lambda config: case["load_done"]
@@ -116,22 +116,25 @@ def test_main(monkeypatch, tmp_path: Path, case: dict) -> None:
     monkeypatch.setattr(
         mp, "setup_logging", lambda level: calls.setdefault("level", level)
     )
-    monkeypatch.setattr(
-        mp,
-        "initialize_state",
-        lambda path: {
+
+    def fake_initialize_state(path: str, overrides: object = None) -> dict:
+        """Return a minimal state, recording the overrides passed through."""
+        calls["overrides"] = overrides
+        return {
             "config": {"cfg": str(path)},
             "config_path": str(path),
             "done": {},
-        },
-    )
+        }
+
+    monkeypatch.setattr(mp, "initialize_state", fake_initialize_state)
     monkeypatch.setattr(
         mp, "run_pipeline", lambda state: calls.setdefault("state", state)
     )
 
-    mp.main(str(config_path), verbose=case["verbose"])
+    mp.main(str(config_path), verbose=case["verbose"], overrides=case.get("override"))
 
     assert calls["level"] == (logging.DEBUG if case["verbose"] else logging.INFO)
+    assert calls["overrides"] == case.get("override")
     state = calls["state"]
     assert isinstance(state, dict)
     assert state["config"] == {"cfg": str(config_path)}
@@ -144,17 +147,23 @@ def test_cli(monkeypatch, tmp_path: Path, case: dict) -> None:
     """cli() parses args and calls main() with them."""
     calls: dict[str, object] = {}
     args = argparse.Namespace(
-        configfile=str(tmp_path / "x.yml"), verbose=case["verbose"]
+        configfile=str(tmp_path / "x.yml"),
+        verbose=case["verbose"],
+        override=case.get("override", []),
     )
     monkeypatch.setattr(mp, "parse_args", lambda: args)
     monkeypatch.setattr(
         mp,
         "main",
-        lambda config_path, verbose: calls.update(
-            config_path=config_path, verbose=verbose
+        lambda config_path, verbose, overrides=None: calls.update(
+            config_path=config_path, verbose=verbose, overrides=overrides
         ),
     )
 
     mp.cli()
 
-    assert calls == {"config_path": Path(args.configfile), "verbose": case["verbose"]}
+    assert calls == {
+        "config_path": Path(args.configfile),
+        "verbose": case["verbose"],
+        "overrides": case.get("override", []),
+    }
