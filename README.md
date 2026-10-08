@@ -3,14 +3,5 @@
 _Socio Economic Impacts of Catastrophic Hydrological Events_
 
 ---
-![coverage](https://gitlab.com/cerfacs/globc/seiche/badges/master/coverage.svg)
 
----
-
-See documentation here: https://cerfacs.gitlab.io/globc/seiche/
-
-Some test data is available here: https://mercure.cerfacs.fr/seiche/
-
-\---
-**⚠️ This repository is under active developpement and is subject to many unprompted breaking changes. ⚠️**
-\---
+[![Documentation](https://img.shields.io/badge/Docs-GitHub%20Pages-42a5f5?style=for-the-badge&logo=github)](https://t-garin.github.io/seiche/)
